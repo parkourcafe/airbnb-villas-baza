@@ -11,6 +11,7 @@ import {
 } from "@bai/db";
 import {
   canManageOrganization,
+  rankMergeCandidates,
   roundCoordinate,
   type EventEvidenceItem,
 } from "@bai/domain";
@@ -64,12 +65,22 @@ export default async function PropertyDetailPage({
     ? canManageOrganization(ctx.selectedOrganization.role)
     : false;
   const mergeCandidates = canMerge
-    ? (await listProperties(supabase, property.datasetId)).items
-        .filter((candidate) => candidate.id !== property.id)
-        .map((candidate) => ({
-          id: candidate.id,
-          name: candidate.canonicalName,
-        }))
+    ? rankMergeCandidates(
+        {
+          id: property.id,
+          name: property.canonicalName,
+          latitude: property.latitude,
+          longitude: property.longitude,
+        },
+        (await listProperties(supabase, property.datasetId)).items
+          .filter((candidate) => candidate.id !== property.id)
+          .map((candidate) => ({
+            id: candidate.id,
+            name: candidate.canonicalName,
+            latitude: candidate.latitude,
+            longitude: candidate.longitude,
+          })),
+      ).map((candidate) => ({ id: candidate.id, name: candidate.name }))
     : [];
   const mergeHistory = canMerge
     ? await listIncomingMergeRedirects(supabase, property.id)

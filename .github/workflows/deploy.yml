@@ -1,0 +1,90 @@
+# Deploy pipeline (A8) — SKELETON.
+#
+# Runs on merge to main. Applies migrations to the linked Supabase project, runs
+# database advisors + a dependency audit, then deploys the web app and the
+# worker. The deploy steps are placeholders: fill in the host you choose (e.g.
+# Vercel for web, a container/Fly/Railway for the worker) and add the matching
+# secrets. Every step is gated so the workflow is a safe no-op until the secrets
+# are configured.
+#
+# Required repository secrets:
+#   SUPABASE_ACCESS_TOKEN   - Supabase CLI access token
+#   SUPABASE_PROJECT_REF    - target project ref
+#   SUPABASE_DB_PASSWORD    - database password (for `supabase db push`)
+#   (plus whatever your web/worker hosts require)
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SUPABASE_CONFIGURED: ${{ secrets.SUPABASE_ACCESS_TOKEN != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Dependency audit (non-blocking)
+        run: pnpm audit --prod || true
+
+      - name: Setup Supabase CLI
+        if: env.SUPABASE_CONFIGURED == 'true'
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Apply migrations
+        if: env.SUPABASE_CONFIGURED == 'true'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          supabase link --project-ref "${{ secrets.SUPABASE_PROJECT_REF }}"
+          supabase db push
+
+      - name: Database advisors (lint)
+        if: env.SUPABASE_CONFIGURED == 'true'
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: supabase db lint --level warning
+
+      - name: Skipped (Supabase not configured)
+        if: env.SUPABASE_CONFIGURED != 'true'
+        run: echo "SUPABASE_ACCESS_TOKEN not set — skipping migrate/advisors."
+
+  deploy-web:
+    needs: migrate
+    runs-on: ubuntu-latest
+    steps:
+      # TODO: replace with your web host's deploy action (e.g. Vercel).
+      - name: Deploy web (placeholder)
+        run: echo "Configure web deploy for apps/web here."
+
+  deploy-worker:
+    needs: migrate
+    runs-on: ubuntu-latest
+    steps:
+      # TODO: replace with your worker host's deploy (container image / Fly / Railway).
+      - name: Deploy worker (placeholder)
+        run: echo "Configure worker deploy for apps/worker here."

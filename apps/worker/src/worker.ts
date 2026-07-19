@@ -16,6 +16,7 @@ import {
 import { runImportJob } from "./jobs/import-runner";
 import { runCollectJob } from "./jobs/collect-runner";
 import { runReportJob } from "./jobs/report-runner";
+import { runExportJob } from "./jobs/export-runner";
 import { createCsvLoader, createCsvUploader } from "./storage";
 
 /**
@@ -89,6 +90,11 @@ async function handleJob(
         throw new Error("report job requires storage configuration");
       }
       await runReportJob({ sql, uploadCsv: deps.uploadCsv }, job);
+    } else if (job.job_type === "export") {
+      if (!deps.uploadCsv) {
+        throw new Error("export job requires storage configuration");
+      }
+      await runExportJob({ sql, uploadCsv: deps.uploadCsv }, job);
     } else {
       logger.warn("job.unsupported", { jobId: job.id, type: job.job_type });
     }
