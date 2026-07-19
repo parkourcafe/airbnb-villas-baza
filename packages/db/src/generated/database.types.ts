@@ -295,11 +295,20 @@ export interface Database {
           rule_version: string | null;
           deduplication_key: string | null;
           is_reviewed: boolean;
+          reviewed_by: string | null;
+          reviewed_at: string | null;
           dismissed_at: string | null;
+          dismissal_reason: string | null;
           created_at: string;
         };
         Insert: Record<string, never>;
-        Update: Record<string, never>;
+        Update: {
+          is_reviewed?: boolean;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          dismissed_at?: string | null;
+          dismissal_reason?: string | null;
+        };
         Relationships: [];
       };
       event_evidence: {
@@ -331,7 +340,15 @@ export interface Database {
           metadata: Json;
           created_at: string;
         };
-        Insert: Record<string, never>;
+        Insert: {
+          organization_id?: string | null;
+          actor_user_id?: string | null;
+          actor_type?: string;
+          action: string;
+          target_type?: string | null;
+          target_id?: string | null;
+          metadata?: Json;
+        };
         Update: Record<string, never>;
         Relationships: [];
       };

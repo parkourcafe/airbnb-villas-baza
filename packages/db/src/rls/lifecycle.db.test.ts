@@ -66,6 +66,26 @@ describe("lifecycle and event persistence", () => {
     ).toHaveLength(0);
   });
 
+  it("records a review action with an audit entry (service-role path)", async () => {
+    await ctx.actAsSuperuser();
+    await ctx.db.exec(`
+      update public.events
+      set is_reviewed = true, reviewed_by = '${ctx.ids.owner1}', reviewed_at = now()
+      where deduplication_key = 'dedup-a1';
+      insert into public.audit_logs (organization_id, actor_user_id, action, target_type, target_id)
+      select '${ctx.ids.org1}', '${ctx.ids.owner1}', 'event.reviewed', 'event', id::text
+      from public.events where deduplication_key = 'dedup-a1';
+    `);
+    const reviewed = await ctx.db.query<{ is_reviewed: boolean }>(
+      `select is_reviewed from public.events where deduplication_key = 'dedup-a1'`,
+    );
+    expect(reviewed.rows[0]?.is_reviewed).toBe(true);
+    const audit = await ctx.db.query(
+      `select id from public.audit_logs where action = 'event.reviewed'`,
+    );
+    expect(audit.rows.length).toBeGreaterThanOrEqual(1);
+  });
+
   it("keeps a dismissed event in history (EVT-08)", async () => {
     await ctx.actAsSuperuser();
     await ctx.db.exec(`

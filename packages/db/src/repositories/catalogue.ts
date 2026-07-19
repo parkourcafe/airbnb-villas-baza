@@ -227,6 +227,8 @@ export async function listListingSnapshots(
 export interface EventFilters {
   eventType?: string;
   propertyId?: string;
+  /** "pending" hides reviewed/dismissed; "dismissed" shows only dismissed. */
+  review?: "pending" | "reviewed" | "dismissed";
 }
 
 interface EventRow {
@@ -238,6 +240,8 @@ interface EventRow {
   confidence: Confidence | null;
   title: string;
   summary: string | null;
+  is_reviewed: boolean;
+  dismissed_at: string | null;
 }
 
 function mapEvent(row: EventRow): CatalogueEvent {
@@ -250,6 +254,8 @@ function mapEvent(row: EventRow): CatalogueEvent {
     confidence: row.confidence,
     title: row.title,
     summary: row.summary,
+    isReviewed: row.is_reviewed,
+    dismissedAt: row.dismissed_at,
   };
 }
 
@@ -264,7 +270,7 @@ export async function listEvents(
   let query = client
     .from("events")
     .select(
-      "id, property_id, source_listing_id, event_type, event_at, confidence, title, summary",
+      "id, property_id, source_listing_id, event_type, event_at, confidence, title, summary, is_reviewed, dismissed_at",
     )
     .eq("dataset_id", datasetId)
     .order("event_at", { ascending: false })
@@ -275,6 +281,13 @@ export async function listEvents(
     query = query.eq("event_type", filters.eventType as DbEventType);
   }
   if (filters.propertyId) query = query.eq("property_id", filters.propertyId);
+  if (filters.review === "pending") {
+    query = query.is("dismissed_at", null).eq("is_reviewed", false);
+  } else if (filters.review === "reviewed") {
+    query = query.eq("is_reviewed", true);
+  } else if (filters.review === "dismissed") {
+    query = query.not("dismissed_at", "is", null);
+  }
   if (after) {
     query = query.or(
       `event_at.lt.${after.sortValue},and(event_at.eq.${after.sortValue},id.lt.${after.id})`,

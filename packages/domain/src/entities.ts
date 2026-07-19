@@ -127,6 +127,8 @@ export interface CatalogueEvent {
   confidence: Confidence | null;
   title: string;
   summary: string | null;
+  isReviewed: boolean;
+  dismissedAt: string | null;
 }
 
 export interface EventEvidenceItem {

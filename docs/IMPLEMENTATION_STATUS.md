@@ -5,9 +5,35 @@ This document tracks milestone progress for Bali Accommodation Intelligence
 
 ## Current state
 
-- **Completed:** Milestones 0–5 (foundation · auth/tenancy · core catalogue · CSV import · snapshot & diff engine · lifecycle & event engine)
-- **Next milestone:** Milestone 6 — Production dashboard experience
+- **Completed:** Milestones 0–6 (foundation · auth/tenancy · core catalogue · CSV import · snapshot & diff engine · lifecycle & event engine · dashboard review)
+- **Next milestone:** Milestone 7 — Watchlists, leads and reports
 - **Runtime:** Node.js 24 LTS · pnpm · Turborepo · Next.js 16 App Router · TypeScript strict
+
+## Milestone 6 — Production dashboard experience ✅
+
+Builds on the M2 catalogue screens (Overview KPIs · Properties table with URL-persisted
+filters + keyset pagination · Property detail tabs · Events + evidence drawer · Map with
+coordinate precision + accessible point list), adding the analyst **review workflow** and
+completing M5's manual-review (5.6):
+
+| Area                       | Status | Notes                                                                                                                                                       |
+| -------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Event review actions (6.5) | ✅     | mark-reviewed / dismiss on the Events page; role-gated (`canMutateData`), URL-persisted `review` filter (pending/reviewed/dismissed)                        |
+| Audited mutation           | ✅     | events are append-only to `authenticated`; review runs via the service-role client after an **in-app membership/role check** (never user metadata) + writes an `audit_logs` row |
+| Dismissal history (EVT-08) | ✅     | a dismissed event stays in history with its reason; audit entry recorded                                                                                     |
+| States (6.7)               | ✅     | empty/loading/permission-aware states across screens; read-only roles see status badges without controls                                                     |
+| DB tests                   | ✅     | reviewed-column + audit write path, dedupe idempotency, dismissal-in-history (33 total)                                                                       |
+
+**Scope note:** the review mutation is authorized in app code from the membership/access
+tables and audited, rather than via a public `SECURITY DEFINER` RPC (AGENTS.md prefers
+avoiding those). Focused dashboard follow-ups that build on existing data — Compare view
+(6.6, on `snapshot_diffs`), map marker clustering + lifecycle layers (6.4), and CSV export
+of a selection (6.2) — are staged next; the underlying data (diffs, lifecycle status,
+coordinates) is already exposed.
+
+**Not executable here:** the live review round-trip needs a running PostgREST + service
+role; the SQL write path (reviewed/dismissed columns, audit insert, dedupe) is executed
+against the real migration in PGlite, and the server action's authorization is unit-typed.
 
 ## Milestone 5 — Lifecycle & event engine ✅
 
