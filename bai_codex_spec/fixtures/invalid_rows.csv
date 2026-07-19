@@ -1,0 +1,7 @@
+source_key,external_id,source_url,title,observed_at,observation_status,region,latitude,longitude,rating,review_count,observed_price_amount,observed_price_currency,observed_price_unit,bedrooms,bathrooms,guest_capacity,is_superhost,host_external_id,official_website,business_whatsapp,direct_booking_url,canonical_property_key
+demo_fixture,,https://fixture.local/x,Missing ID,bad-date,active,Canggu,-8.65,115.13,4.5,10,100,IDR,night,2,2,4,false,,,,,x
+demo_fixture,bad-2,,Bad rating,2026-07-18T00:00:00Z,active,Canggu,-8.65,115.13,7.2,10,100,IDR,night,2,2,4,false,,,,,bad-2
+demo_fixture,bad-3,,Negative reviews,2026-07-18T00:00:00Z,active,Canggu,-8.65,115.13,4.2,-1,100,IDR,night,2,2,4,false,,,,,bad-3
+demo_fixture,bad-4,,Invalid status,2026-07-18T00:00:00Z,deleted,Canggu,-8.65,115.13,4.2,1,100,IDR,night,2,2,4,false,,,,,bad-4
+demo_fixture,bad-5,,Invalid coordinates,2026-07-18T00:00:00Z,active,Canggu,200,500,4.2,1,100,IDR,night,2,2,4,false,,,,,bad-5
+unknown_source,bad-6,,Unknown source,2026-07-18T00:00:00Z,active,Canggu,-8.65,115.13,4.2,1,100,IDR,night,2,2,4,false,,,,,bad-6

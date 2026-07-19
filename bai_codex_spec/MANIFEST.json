@@ -1,0 +1,78 @@
+{
+  "00_READ_ME_FIRST.md": {
+    "bytes": 8675,
+    "sha256": "7cfffe53fee274b46c9683b567a2a2b3049193514a20ad6c2e20e4171a110679"
+  },
+  "01_PRODUCT_AND_SITE_ARCHITECTURE.md": {
+    "bytes": 21315,
+    "sha256": "326732eb8e048e69ec8ddbc9a6e3116f9059269f6c92d3cfcace84dca84c18d3"
+  },
+  "02_SYSTEM_ARCHITECTURE.md": {
+    "bytes": 23086,
+    "sha256": "523cf7f597434a08ec598d892dae8b79fccfe9d8124fe278d6764a1c609d0400"
+  },
+  "03_DATABASE_SCHEMA.md": {
+    "bytes": 25411,
+    "sha256": "f7e2bb191a7861a3e097144134962cc7677b6a8f387209533b73edeac7eede3f"
+  },
+  "04_EVENT_AND_REMOVAL_ENGINE.md": {
+    "bytes": 14119,
+    "sha256": "29b4ebdf38cc7250ec0991045cb3dbea86cab04a78dd703840211887f89c9234"
+  },
+  "05_CODEX_IMPLEMENTATION_PLAN.md": {
+    "bytes": 15205,
+    "sha256": "e419e0da387668a124870b91aebe7147f20ba90a9904fbf86e4451e596245611"
+  },
+  "06_ACCEPTANCE_TESTS.md": {
+    "bytes": 9292,
+    "sha256": "4f2b461ae003c4cf10e02c0b654094e4942adbf3d9d3575bc640e89fe820b4ff"
+  },
+  "07_SOURCE_COMPLIANCE.md": {
+    "bytes": 6866,
+    "sha256": "ab798ebc1fc42339d429e03037c15ca6eb5b734dea9a27a7712483eea81a3234"
+  },
+  "AGENTS.md": {
+    "bytes": 4349,
+    "sha256": "552b9f64610160e85d4e09e91166ea5d2f14396f43ced5997d04d1a8b322d5ee"
+  },
+  "BAI_MASTER_SPEC.md": {
+    "bytes": 130097,
+    "sha256": "a3976542d509a6b3f7526c644a68319711105c378916c78db298dce48e26a2d2"
+  },
+  "CODEX_START_PROMPT.md": {
+    "bytes": 1147,
+    "sha256": "44fb17d038d47a04fa20508c426d590b6d2c3e0369f5be60691faa0a81819fc5"
+  },
+  "fixtures/README.md": {
+    "bytes": 1104,
+    "sha256": "bc260b74bfb875588342d17ee10bd65df287dbabb9d42ef7e9df5f31052d0f9a"
+  },
+  "fixtures/baseline.csv": {
+    "bytes": 1610,
+    "sha256": "2400dde7fc60b0549a08037ff21345616a7432f439cbe93ea5fa27c2a66a6c87"
+  },
+  "fixtures/followup_1.csv": {
+    "bytes": 1847,
+    "sha256": "05938e485f3d5879d97a7e85c8c1ab0ded62935a510d5faf2c43fc40377f24ca"
+  },
+  "fixtures/followup_2.csv": {
+    "bytes": 1871,
+    "sha256": "f51ffefa64f21587edd141522004ba6221d3e1ee13c68b0b5827aeadb3b39b1f"
+  },
+  "fixtures/followup_3.csv": {
+    "bytes": 1871,
+    "sha256": "eb3481c1cdef146697b2d16357d0f8d518bea9b3ab28e71addee68e92ebc7b9b"
+  },
+  "fixtures/invalid_rows.csv": {
+    "bytes": 1083,
+    "sha256": "7c128b5532e0f67c9b067edd036fbe6a7f315f2259b1c3348513523ab85daaea"
+  },
+  "fixtures/reactivated.csv": {
+    "bytes": 579,
+    "sha256": "1011edd77f1a1dc71641db03f9d12c3c36accc804f481a75c443c6e2a1f064c4"
+  },
+  "fixtures/source_rules.demo_fixture.json": {
+    "bytes": 647,
+    "sha256": "b469d7fcb574eb184e02732bfcbe4eff577d44a687b6d8d29837f912ef23ff78"
+  }
+}
