@@ -132,7 +132,8 @@ function snapshotFromRow(row: SnapshotRow): BuiltSnapshot {
       : null;
   return {
     observedAt: row.observed_at,
-    observationStatus: row.observation_status as SnapshotObservation["observationStatus"],
+    observationStatus:
+      row.observation_status as SnapshotObservation["observationStatus"],
     parserVersion: row.parser_version,
     normalizerVersion: "",
     title: null,
@@ -179,7 +180,9 @@ async function resolveSourceListing(
   ctx: SnapshotPersistCtx,
   row: ParsedImportRow,
 ): Promise<ResolvedListing> {
-  const existing = await tx<(LifecycleListingRow & { id: string; property_id: string })[]>`
+  const existing = await tx<
+    (LifecycleListingRow & { id: string; property_id: string })[]
+  >`
     select id, property_id, current_lifecycle_status, current_confidence,
            consecutive_misses, last_seen_active_at, last_observed_at, first_miss_at,
            suspected_inactive_at, confirmed_inactive_at, reactivated_at, lifecycle_state
@@ -372,7 +375,15 @@ export async function persistAcceptedRow(
     built,
   );
 
-  await persistEvents(tx, ctx, listing, snapshotId, previousSnapshotId, built, diffs);
+  await persistEvents(
+    tx,
+    ctx,
+    listing,
+    snapshotId,
+    previousSnapshotId,
+    built,
+    diffs,
+  );
 }
 
 const firstSeenDate = (observedAt: string): string => observedAt.slice(0, 10);
@@ -477,7 +488,10 @@ async function persistEvents(
         collectionRunId: ctx.runId,
         evidenceType: "lifecycle",
         explanation: event.explanation,
-        metadata: { confidence: event.confidence, ruleVersion: event.ruleVersion },
+        metadata: {
+          confidence: event.confidence,
+          ruleVersion: event.ruleVersion,
+        },
       },
     );
   }

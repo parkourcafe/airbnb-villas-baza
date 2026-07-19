@@ -757,12 +757,7 @@ export interface Database {
         | "lost"
         | "archived";
       report_status:
-        | "pending"
-        | "queued"
-        | "running"
-        | "ready"
-        | "failed"
-        | "expired";
+        "pending" | "queued" | "running" | "ready" | "failed" | "expired";
     };
     CompositeTypes: Record<never, never>;
   };

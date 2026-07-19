@@ -84,7 +84,9 @@ export function normalizeUrl(input: string): string | null {
   for (const [key, value] of url.searchParams) {
     if (!isTrackingParam(key)) kept.push([key, value]);
   }
-  kept.sort(([a, av], [b, bv]) => (a === b ? av.localeCompare(bv) : a.localeCompare(b)));
+  kept.sort(([a, av], [b, bv]) =>
+    a === b ? av.localeCompare(bv) : a.localeCompare(b),
+  );
   url.search = "";
   for (const [key, value] of kept) url.searchParams.append(key, value);
 

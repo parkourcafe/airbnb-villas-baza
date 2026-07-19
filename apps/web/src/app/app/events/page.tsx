@@ -47,9 +47,7 @@ const REVIEW_OPTIONS = ["pending", "reviewed", "dismissed"] as const;
 function isReview(
   value: string | undefined,
 ): value is "pending" | "reviewed" | "dismissed" {
-  return (
-    value === "pending" || value === "reviewed" || value === "dismissed"
-  );
+  return value === "pending" || value === "reviewed" || value === "dismissed";
 }
 
 export default async function EventsPage({

@@ -13,7 +13,10 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { ActionState } from "../../_components/action-form";
 
 async function requireAdmin(): Promise<
-  | { ok: true; supabase: Awaited<ReturnType<typeof createSupabaseServerClient>> }
+  | {
+      ok: true;
+      supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>;
+    }
   | { ok: false; error: string }
 > {
   const ctx = await loadTenancyContext();

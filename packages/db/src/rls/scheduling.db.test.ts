@@ -49,12 +49,14 @@ describe("source catalogue and scheduling", () => {
     );
     expect(ok.affectedRows).toBe(1);
     // A schedule for a disabled source: allowed to store, never enqueued.
-    await ctx.db.query(
-      `insert into public.collection_schedules (dataset_id, source_id, cadence_minutes)
+    await ctx.db
+      .query(
+        `insert into public.collection_schedules (dataset_id, source_id, cadence_minutes)
        values ('${ctx.ids.datasetB}', '${disabledSource}', 60)`,
-    ).catch(() => {
-      /* datasetB not administered by owner1 — that's fine, ignore */
-    });
+      )
+      .catch(() => {
+        /* datasetB not administered by owner1 — that's fine, ignore */
+      });
   });
 
   it("enqueues due runs only for approved sources, then not again until due", async () => {

@@ -13,31 +13,31 @@ This document tracks milestone progress for Bali Accommodation Intelligence
 
 Deferred items from the milestone scope notes, now implemented:
 
-| Item                          | Milestone | Notes                                                                                                                     |
-| ----------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Compare view                  | 6.6       | `/app/compare` shows a snapshot's field diffs vs its previous comparable; `listSnapshotDiffs`; reachable per source listing |
-| CSV export of selection       | 6.2       | `GET /api/properties/export` — synchronous, RLS-scoped, filters recorded in headers, injection-safe, 10k sync cap (else 413) |
-| Map clustering + layers       | 6.4       | MapLibre GeoJSON clustering, cluster counts, lifecycle-coloured unclustered points, click popups                          |
-| Property split + rollback     | 9         | `split_listing` / `rollback_merge` RPCs (admin-gated, audited, snapshots preserved); redirect record carries moved set    |
-| Source admin UI               | 8.6       | `public.source_catalog` safe view + Sources page (compliance/capabilities/review dates) with admin schedule form          |
-| Scheduled collection enqueue  | 8.5       | `collection_schedules` + service-role `enqueue_due_collections()`; cron endpoint enqueues due, approved, automatable sources |
-| Async reports + signed download | 7.3     | report-insert trigger → `report` job; worker `report-runner` generates CSV, uploads to the `reports` bucket, marks ready + expiry; `GET /api/reports/:id/download` mints a short-lived signed URL |
-| Async export threshold        | 7.4       | property export caps sync at 10k rows and signals when an async export is required; report/export share the async pipeline |
+| Item                            | Milestone | Notes                                                                                                                                                                                             |
+| ------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Compare view                    | 6.6       | `/app/compare` shows a snapshot's field diffs vs its previous comparable; `listSnapshotDiffs`; reachable per source listing                                                                       |
+| CSV export of selection         | 6.2       | `GET /api/properties/export` — synchronous, RLS-scoped, filters recorded in headers, injection-safe, 10k sync cap (else 413)                                                                      |
+| Map clustering + layers         | 6.4       | MapLibre GeoJSON clustering, cluster counts, lifecycle-coloured unclustered points, click popups                                                                                                  |
+| Property split + rollback       | 9         | `split_listing` / `rollback_merge` RPCs (admin-gated, audited, snapshots preserved); redirect record carries moved set                                                                            |
+| Source admin UI                 | 8.6       | `public.source_catalog` safe view + Sources page (compliance/capabilities/review dates) with admin schedule form                                                                                  |
+| Scheduled collection enqueue    | 8.5       | `collection_schedules` + service-role `enqueue_due_collections()`; cron endpoint enqueues due, approved, automatable sources                                                                      |
+| Async reports + signed download | 7.3       | report-insert trigger → `report` job; worker `report-runner` generates CSV, uploads to the `reports` bucket, marks ready + expiry; `GET /api/reports/:id/download` mints a short-lived signed URL |
+| Async export threshold          | 7.4       | property export caps sync at 10k rows and signals when an async export is required; report/export share the async pipeline                                                                        |
 
 New tests: split/rollback + scheduling + report-enqueue in PGlite (**51 DB tests**); Compare/export/map/report-download verified by typecheck + build. Storage upload/download and the live worker report run remain CI/production-only (no Storage here), consistent with the import pipeline's caveat.
 
 ## Milestone 10 — Security, performance and launch hardening ✅
 
-| Area                       | Status | Notes                                                                                                                          |
-| -------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| Security checklist         | ✅     | `docs/SECURITY_CHECKLIST.md` maps every item (RLS, grants, authz, SECURITY DEFINER, secrets, cron, injection) to its enforcement + verification |
-| CSV formula injection      | ✅     | `escapeCsvCell` (`= + - @ \t \r` guard + RFC-4180 quoting), unit-tested                                                        |
-| Input fuzzing              | ✅     | adversarial field values + malformed CSV never crash; bad rows rejected with typed codes (`import-engine/fuzz.test`)           |
-| Cron auth / admin authz    | ✅     | constant-time `CRON_SECRET`, fail-closed; merge/review admin-gated (M8/M9)                                                     |
-| Audit integrity            | ✅     | merge + review write `audit_logs`; dismissed events retained                                                                   |
-| Reliability / idempotency  | ✅     | deterministic dedupe keys + unique constraints across snapshots/diffs/events; stale-job recovery; degraded-run suppression     |
-| Operations runbook         | ✅     | `docs/RUNBOOK.md`: launch checklist, source disable switch, data-correction workflow, incident checklist, backup expectations |
-| Observation language / UX  | ✅     | methodology page; "Likely inactive" labelling; UTC-stored / Asia-Makassar display; demo rows marked                            |
+| Area                      | Status | Notes                                                                                                                                           |
+| ------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Security checklist        | ✅     | `docs/SECURITY_CHECKLIST.md` maps every item (RLS, grants, authz, SECURITY DEFINER, secrets, cron, injection) to its enforcement + verification |
+| CSV formula injection     | ✅     | `escapeCsvCell` (`= + - @ \t \r` guard + RFC-4180 quoting), unit-tested                                                                         |
+| Input fuzzing             | ✅     | adversarial field values + malformed CSV never crash; bad rows rejected with typed codes (`import-engine/fuzz.test`)                            |
+| Cron auth / admin authz   | ✅     | constant-time `CRON_SECRET`, fail-closed; merge/review admin-gated (M8/M9)                                                                      |
+| Audit integrity           | ✅     | merge + review write `audit_logs`; dismissed events retained                                                                                    |
+| Reliability / idempotency | ✅     | deterministic dedupe keys + unique constraints across snapshots/diffs/events; stale-job recovery; degraded-run suppression                      |
+| Operations runbook        | ✅     | `docs/RUNBOOK.md`: launch checklist, source disable switch, data-correction workflow, incident checklist, backup expectations                   |
+| Observation language / UX | ✅     | methodology page; "Likely inactive" labelling; UTC-stored / Asia-Makassar display; demo rows marked                                             |
 
 **Acceptance (M10):** full test suite passes ✓ · production build passes ✓ · security checklist completed ✓ · no live restricted source ✓. Database advisors (`supabase db lint`) and `pnpm audit` are documented to run in CI where a live DB/registry is available.
 
@@ -57,15 +57,15 @@ locally.
 
 ## Milestone 9 — Manual entity resolution ✅
 
-| Area                 | Status | Notes                                                                                                                                                              |
-| -------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Merge RPC            | ✅     | `public.merge_properties(from,to,reason)` reassigns source listings/events/aliases/notes, records a `property_redirects` row, archives the duplicate, recomputes the canonical window, and audits |
-| Preservation         | ✅     | snapshots and source listings are never deleted — they follow their listing to the canonical property, so all history stays reachable                             |
-| Permissions          | ✅     | admin-gated: the RPC validates `private.user_can_administer_dataset(auth.uid(), …)`; a non-admin call raises; UI control shown only to owner/admin                 |
-| SECURITY DEFINER     | ✅     | hardening checklist applied: fixed empty `search_path`, explicit `auth.uid()` admin check, execute revoked from public/anon and granted only to `authenticated`   |
-| Redirect record      | ✅     | `property_redirects` (dataset-scoped SELECT) preserves the from→to mapping for lookups and rollback                                                               |
-| UI                   | ✅     | admin-only "Resolve duplicate" control on the property detail page with candidate list + reason                                                                    |
-| DB tests             | ✅     | non-admin blocked, merge preserves snapshots/listings, events reachable, duplicate archived, redirect + audit written, self-merge rejected (3; 45 total)          |
+| Area             | Status | Notes                                                                                                                                                                                             |
+| ---------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Merge RPC        | ✅     | `public.merge_properties(from,to,reason)` reassigns source listings/events/aliases/notes, records a `property_redirects` row, archives the duplicate, recomputes the canonical window, and audits |
+| Preservation     | ✅     | snapshots and source listings are never deleted — they follow their listing to the canonical property, so all history stays reachable                                                             |
+| Permissions      | ✅     | admin-gated: the RPC validates `private.user_can_administer_dataset(auth.uid(), …)`; a non-admin call raises; UI control shown only to owner/admin                                                |
+| SECURITY DEFINER | ✅     | hardening checklist applied: fixed empty `search_path`, explicit `auth.uid()` admin check, execute revoked from public/anon and granted only to `authenticated`                                   |
+| Redirect record  | ✅     | `property_redirects` (dataset-scoped SELECT) preserves the from→to mapping for lookups and rollback                                                                                               |
+| UI               | ✅     | admin-only "Resolve duplicate" control on the property detail page with candidate list + reason                                                                                                   |
+| DB tests         | ✅     | non-admin blocked, merge preserves snapshots/listings, events reachable, duplicate archived, redirect + audit written, self-merge rejected (3; 45 total)                                          |
 
 **Acceptance (M9):** snapshots never deleted ✓ · all source listings preserved ✓ · events/history reachable via the canonical property ✓ · action audited ✓ · non-admin cannot merge ✓ (executed in PGlite).
 
@@ -73,16 +73,16 @@ locally.
 
 ## Milestone 8 — Source Adapter SDK and worker scheduling ✅
 
-| Area                    | Status | Notes                                                                                                                                                              |
-| ----------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Source SDK (8.1)        | ✅     | adapter contract + compliance gate (existing) extended with `validateCapabilities` / `validateRequiredConfig`; parser version + rate/health surfaced             |
-| Fixture adapter (8.2)   | ✅     | `FixtureSourceAdapter` reads controlled in-memory fixtures, simulates active/not_found/source_error, self-guards via the gate; contract tests                     |
-| Manual CSV adapter (8.3)| ✅     | `CsvSourceAdapter` wraps the import-engine parser under adapter conventions; `automation_allowed: false` (a reviewed human action)                                 |
-| Worker (8.4)            | ✅     | polling · bounded concurrency · graceful shutdown · heartbeat · retry · stale-job recovery (M3) + a `collect` runner that gates → collects → persists (M4/M5)      |
-| Cron (8.5)              | ✅     | protected `POST /api/cron`; `CRON_SECRET` constant-time check, **fail-closed** when unset, 401 on missing/wrong secret, 405 on GET                                 |
-| Compliance enforcement  | ✅     | DB trigger rejects a collection run for any non-approved source (even a hand-inserted one); the worker gate blocks disabled/pending/automation-forbidden at runtime |
-| Prohibition (8.7)       | ✅     | no live Airbnb/Booking/Agoda collector; `airbnb` stays seeded disabled and is never registered with automation                                                     |
-| Tests                   | ✅     | 13 SDK contract tests; 3 PGlite compliance-gate tests; 3 cron 401/405 e2e; JOB-01 double-claim + stale-recovery (M3)                                              |
+| Area                     | Status | Notes                                                                                                                                                               |
+| ------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Source SDK (8.1)         | ✅     | adapter contract + compliance gate (existing) extended with `validateCapabilities` / `validateRequiredConfig`; parser version + rate/health surfaced                |
+| Fixture adapter (8.2)    | ✅     | `FixtureSourceAdapter` reads controlled in-memory fixtures, simulates active/not_found/source_error, self-guards via the gate; contract tests                       |
+| Manual CSV adapter (8.3) | ✅     | `CsvSourceAdapter` wraps the import-engine parser under adapter conventions; `automation_allowed: false` (a reviewed human action)                                  |
+| Worker (8.4)             | ✅     | polling · bounded concurrency · graceful shutdown · heartbeat · retry · stale-job recovery (M3) + a `collect` runner that gates → collects → persists (M4/M5)       |
+| Cron (8.5)               | ✅     | protected `POST /api/cron`; `CRON_SECRET` constant-time check, **fail-closed** when unset, 401 on missing/wrong secret, 405 on GET                                  |
+| Compliance enforcement   | ✅     | DB trigger rejects a collection run for any non-approved source (even a hand-inserted one); the worker gate blocks disabled/pending/automation-forbidden at runtime |
+| Prohibition (8.7)        | ✅     | no live Airbnb/Booking/Agoda collector; `airbnb` stays seeded disabled and is never registered with automation                                                      |
+| Tests                    | ✅     | 13 SDK contract tests; 3 PGlite compliance-gate tests; 3 cron 401/405 e2e; JOB-01 double-claim + stale-recovery (M3)                                                |
 
 **Acceptance (M8):** disabled source cannot run even if a job is inserted ✓ · pending source cannot run ✓ · approved fixture source runs (adapter contract + collect runner) ✓ · unauthorized cron → 401 ✓ · two workers do not claim the same job ✓ (`claim_collection_job`, JOB-01) · stale job recovers ✓.
 
@@ -90,19 +90,19 @@ locally.
 
 ## Milestone 7 — Watchlists, leads and reports ✅
 
-| Area                 | Status | Notes                                                                                                                                                                        |
-| -------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Area                 | Status | Notes                                                                                                                                                                                    |
+| -------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Schema + RLS         | ✅     | `watchlists`, `watchlist_items` (exactly-one-target check), `leads`, `lead_activities`, `property_notes`, `reports` — **organization-private** RLS, analyst+ mutations, viewer read-only |
-| Watchlists (7.1)     | ✅     | list + create (org-private); item count; add-property target via `watchlist_items`                                                                                          |
-| Leads (7.2)          | ✅     | convert event→lead preserving `event_id` evidence link; stages; `do_not_contact`; **no send/outreach**; idempotent per org+property                                        |
-| Reports (7.3)        | ✅     | report definitions with **immutable parameters** (DB trigger freezes `parameters`); status lifecycle; watchlist-scoped params validated                                     |
-| Repositories + types | ✅     | `listWatchlists`/`createWatchlist`/`listLeads`/`createLead`/`listReports`/`createReport`; `lead_stage`/`report_status` enums + table types                                  |
-| UI                   | ✅     | Watchlists, Leads (new nav), Reports pages with role-gated create forms; "Create lead" on the Events page                                                                    |
-| DB tests             | ✅     | cross-org isolation (watchlists/leads/reports invisible to another org), viewer-blocked insert, lead→evidence link, report-parameter immutability, item-target check (6; 39 total) |
+| Watchlists (7.1)     | ✅     | list + create (org-private); item count; add-property target via `watchlist_items`                                                                                                       |
+| Leads (7.2)          | ✅     | convert event→lead preserving `event_id` evidence link; stages; `do_not_contact`; **no send/outreach**; idempotent per org+property                                                      |
+| Reports (7.3)        | ✅     | report definitions with **immutable parameters** (DB trigger freezes `parameters`); status lifecycle; watchlist-scoped params validated                                                  |
+| Repositories + types | ✅     | `listWatchlists`/`createWatchlist`/`listLeads`/`createLead`/`listReports`/`createReport`; `lead_stage`/`report_status` enums + table types                                               |
+| UI                   | ✅     | Watchlists, Leads (new nav), Reports pages with role-gated create forms; "Create lead" on the Events page                                                                                |
+| DB tests             | ✅     | cross-org isolation (watchlists/leads/reports invisible to another org), viewer-blocked insert, lead→evidence link, report-parameter immutability, item-target check (6; 39 total)       |
 
 **Acceptance (M7):** analyst converts a high-confidence event to a lead ✓ · lead retains the evidence link ✓ · a watchlist report definition generates ✓ · an organization cannot access another organization's leads/reports ✓ (executed in PGlite).
 
-**Scope note:** report **async generation + signed CSV download** and large-export (>10k) jobs are a worker pipeline staged with M8 (scheduling); the report *definition* with immutable, reproducible parameters is complete. `notification_rules`/`exports` tables are deferred (email delivery is post-MVP per spec).
+**Scope note:** report **async generation + signed CSV download** and large-export (>10k) jobs are a worker pipeline staged with M8 (scheduling); the report _definition_ with immutable, reproducible parameters is complete. `notification_rules`/`exports` tables are deferred (email delivery is post-MVP per spec).
 
 ## Milestone 6 — Production dashboard experience ✅
 
@@ -111,13 +111,13 @@ filters + keyset pagination · Property detail tabs · Events + evidence drawer 
 coordinate precision + accessible point list), adding the analyst **review workflow** and
 completing M5's manual-review (5.6):
 
-| Area                       | Status | Notes                                                                                                                                                       |
-| -------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Event review actions (6.5) | ✅     | mark-reviewed / dismiss on the Events page; role-gated (`canMutateData`), URL-persisted `review` filter (pending/reviewed/dismissed)                        |
+| Area                       | Status | Notes                                                                                                                                                                           |
+| -------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Event review actions (6.5) | ✅     | mark-reviewed / dismiss on the Events page; role-gated (`canMutateData`), URL-persisted `review` filter (pending/reviewed/dismissed)                                            |
 | Audited mutation           | ✅     | events are append-only to `authenticated`; review runs via the service-role client after an **in-app membership/role check** (never user metadata) + writes an `audit_logs` row |
-| Dismissal history (EVT-08) | ✅     | a dismissed event stays in history with its reason; audit entry recorded                                                                                     |
-| States (6.7)               | ✅     | empty/loading/permission-aware states across screens; read-only roles see status badges without controls                                                     |
-| DB tests                   | ✅     | reviewed-column + audit write path, dedupe idempotency, dismissal-in-history (33 total)                                                                       |
+| Dismissal history (EVT-08) | ✅     | a dismissed event stays in history with its reason; audit entry recorded                                                                                                        |
+| States (6.7)               | ✅     | empty/loading/permission-aware states across screens; read-only roles see status badges without controls                                                                        |
+| DB tests                   | ✅     | reviewed-column + audit write path, dedupe idempotency, dismissal-in-history (33 total)                                                                                         |
 
 **Scope note:** the review mutation is authorized in app code from the membership/access
 tables and audited, rather than via a public `SECURITY DEFINER` RPC (AGENTS.md prefers
@@ -132,15 +132,15 @@ against the real migration in PGlite, and the server action's authorization is u
 
 ## Milestone 5 — Lifecycle & event engine ✅
 
-| Area                                    | Status | Notes                                                                                                                                                                                                                              |
-| --------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Area                                    | Status | Notes                                                                                                                                                                                                                                          |
+| --------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Lifecycle reducer (`@bai/event-engine`) | ✅     | pure `reduceLifecycle` (04 §18): qualifying-miss rules, versioned thresholds (first_miss→suspected: ≥2 misses/≥24h/≥2 runs; →confirmed: ≥3 misses/≥7d/high-conf not_found), degraded-run suppression, reactivation reset, `lifecycle-state:v1` |
-| Run health                              | ✅     | `assessRunHealth`: valid-drop <70%, error-rate >15%, blocked-rate >5% → degraded (04 §7, 05 §5.2)                                                                                                                                  |
-| Events + dedupe                         | ✅     | material field-change events (price/rating/review-count/host/direct-channel) + lifecycle transition events; deterministic dedupe keys (04 §9); engine `EventType` mapped to `app.event_type` at the DB boundary                    |
-| Evidence                                | ✅     | every generated event writes an `event_evidence` row (snapshot/run/rule-version/explanation, 04 §15, EVT-01)                                                                                                                       |
-| Persistence (worker)                    | ✅     | import runner now emits `listing_created` on first sight, field-change events from diffs, and lifecycle transitions; updates the authoritative lifecycle projection + `lifecycle_state` jsonb (new migration)                       |
-| Engine tests                            | ✅     | 20 timeline/unit tests: LIFE-01…LIFE-10 + EVT-03…EVT-07 + run-health + idempotency                                                                                                                                                |
-| DB tests                                | ✅     | event dedupe-key idempotency, evidence linkage, lifecycle jsonb state, dataset-scoped RLS, dismissal-in-history (4 executed; 32 total)                                                                                             |
+| Run health                              | ✅     | `assessRunHealth`: valid-drop <70%, error-rate >15%, blocked-rate >5% → degraded (04 §7, 05 §5.2)                                                                                                                                              |
+| Events + dedupe                         | ✅     | material field-change events (price/rating/review-count/host/direct-channel) + lifecycle transition events; deterministic dedupe keys (04 §9); engine `EventType` mapped to `app.event_type` at the DB boundary                                |
+| Evidence                                | ✅     | every generated event writes an `event_evidence` row (snapshot/run/rule-version/explanation, 04 §15, EVT-01)                                                                                                                                   |
+| Persistence (worker)                    | ✅     | import runner now emits `listing_created` on first sight, field-change events from diffs, and lifecycle transitions; updates the authoritative lifecycle projection + `lifecycle_state` jsonb (new migration)                                  |
+| Engine tests                            | ✅     | 20 timeline/unit tests: LIFE-01…LIFE-10 + EVT-03…EVT-07 + run-health + idempotency                                                                                                                                                             |
+| DB tests                                | ✅     | event dedupe-key idempotency, evidence linkage, lifecycle jsonb state, dataset-scoped RLS, dismissal-in-history (4 executed; 32 total)                                                                                                         |
 
 **Acceptance (M5):** all `06_ACCEPTANCE_TESTS.md` Lifecycle scenarios (LIFE-01…LIFE-10) are covered by the pure reducer's timeline tests; Event scenarios EVT-01…EVT-07 by the event-derivation + persistence tests. Manual-review **columns** (`is_reviewed`/`reviewed_*`/`dismissed_*`) exist and a dismissed event stays in history (EVT-08); the review/dismiss **UI + audited RPC** lands with the dashboard/review surfaces (M6/M7), since events are append-only to `authenticated` and review mutation needs a SECURITY DEFINER action.
 
@@ -148,15 +148,15 @@ against the real migration in PGlite, and the server action's authorization is u
 
 ## Milestone 4 — Snapshot & diff engine ✅
 
-| Area                                     | Status | Notes                                                                                                                                                                                                                                     |
-| ---------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Normalization (`@bai/snapshot-engine`)   | ✅     | Unicode/whitespace text, URL (tracking-param strip, port/slash/fragment/query canonicalization), boolean, number (thousands-sep), set (sorted/de-duped/lower-cased) + hashes, `setDelta`                                                  |
-| Snapshot builder                         | ✅     | `buildSnapshot`: title/description/photos/amenities hashes, time-independent `content_fingerprint`, `field_presence` (not-collected vs collected-null), `quality_flags`, rounded coords, `snapshot-normalizer:v1`                        |
-| Comparable-snapshot selection            | ✅     | `selectComparableSnapshot`: latest earlier · valid for field · parser-compatible · non-degraded · deterministic tie-break (04 §11)                                                                                                        |
-| Diff engine + versioned materiality      | ✅     | per-field-type diffs (scalar/money/boolean/hash/set/location); price ≥5% (same currency+unit only), rating ≥0.05, review-count increase-only; parser-mismatch suppression; `field-diff:v1` config; exact deltas stored                   |
-| Persistence wiring (worker)              | ✅     | import runner now upserts source listings (unique dataset+source+external), resolves canonical property (explicit key via alias, else new), inserts immutable snapshots (unique per listing/run), selects comparable, persists diffs      |
-| Engine tests                             | ✅     | 37 golden/unit tests (normalize, snapshot, diff, selection) — covers 04 scenarios 11/12/13 + idempotency + parser-version                                                                                                                |
-| DB tests                                 | ✅     | snapshot immutability, diff idempotency (unique key), dataset-scoped RLS, append-only enforcement (4 executed in PGlite; 28 total)                                                                                                        |
+| Area                                   | Status | Notes                                                                                                                                                                                                                                |
+| -------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Normalization (`@bai/snapshot-engine`) | ✅     | Unicode/whitespace text, URL (tracking-param strip, port/slash/fragment/query canonicalization), boolean, number (thousands-sep), set (sorted/de-duped/lower-cased) + hashes, `setDelta`                                             |
+| Snapshot builder                       | ✅     | `buildSnapshot`: title/description/photos/amenities hashes, time-independent `content_fingerprint`, `field_presence` (not-collected vs collected-null), `quality_flags`, rounded coords, `snapshot-normalizer:v1`                    |
+| Comparable-snapshot selection          | ✅     | `selectComparableSnapshot`: latest earlier · valid for field · parser-compatible · non-degraded · deterministic tie-break (04 §11)                                                                                                   |
+| Diff engine + versioned materiality    | ✅     | per-field-type diffs (scalar/money/boolean/hash/set/location); price ≥5% (same currency+unit only), rating ≥0.05, review-count increase-only; parser-mismatch suppression; `field-diff:v1` config; exact deltas stored               |
+| Persistence wiring (worker)            | ✅     | import runner now upserts source listings (unique dataset+source+external), resolves canonical property (explicit key via alias, else new), inserts immutable snapshots (unique per listing/run), selects comparable, persists diffs |
+| Engine tests                           | ✅     | 37 golden/unit tests (normalize, snapshot, diff, selection) — covers 04 scenarios 11/12/13 + idempotency + parser-version                                                                                                            |
+| DB tests                               | ✅     | snapshot immutability, diff idempotency (unique key), dataset-scoped RLS, append-only enforcement (4 executed in PGlite; 28 total)                                                                                                   |
 
 **Acceptance (M4):** baseline→follow-up creates expected diffs ✓ · uncollected fields never diff ✓ · incompatible prices (currency/unit) not compared ✓ · repeated run creates no duplicate snapshots/diffs (unique constraints + deterministic keys) ✓ · parser version stored on every snapshot ✓.
 

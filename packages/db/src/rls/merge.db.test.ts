@@ -86,9 +86,7 @@ describe("property merge", () => {
     expect(redirectId).toBeTruthy();
 
     await ctx.actAs(ctx.ids.owner1);
-    await ctx.db.query(
-      `select public.rollback_merge('${redirectId}', 'undo')`,
-    );
+    await ctx.db.query(`select public.rollback_merge('${redirectId}', 'undo')`);
 
     await ctx.actAsSuperuser();
     // Listing moved back to A1, which is un-archived again.
@@ -106,7 +104,9 @@ describe("property merge", () => {
     // A viewer cannot split.
     await ctx.actAs(ctx.ids.viewer1);
     await expect(
-      ctx.db.query(`select public.split_listing('${ctx.ids.listingA1}', 'sep')`),
+      ctx.db.query(
+        `select public.split_listing('${ctx.ids.listingA1}', 'sep')`,
+      ),
     ).rejects.toThrow(/not authorized/i);
 
     await ctx.actAs(ctx.ids.owner1);

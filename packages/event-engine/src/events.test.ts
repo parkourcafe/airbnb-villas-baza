@@ -43,7 +43,13 @@ describe("fieldChangeEvents", () => {
   it("EVT-05: a non-material review-count decrease is not a visible event", () => {
     expect(
       fieldChangeEvents(
-        [diff({ fieldName: "review_count", changeKind: "decreased", isMaterial: false })],
+        [
+          diff({
+            fieldName: "review_count",
+            changeKind: "decreased",
+            isMaterial: false,
+          }),
+        ],
         ctx,
       ),
     ).toHaveLength(0);

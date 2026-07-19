@@ -43,7 +43,8 @@ export function selectComparableSnapshot(
 ): ComparableCandidate | null {
   const compatible =
     options.isParserCompatible ??
-    ((candidate: string, currentVersion: string) => candidate === currentVersion);
+    ((candidate: string, currentVersion: string) =>
+      candidate === currentVersion);
   const currentTime = Date.parse(current.observedAt);
 
   const eligible = candidates.filter((candidate) => {
@@ -51,7 +52,8 @@ export function selectComparableSnapshot(
     if (!(candidateTime < currentTime)) return false; // strictly earlier
     if (candidate.fieldPresence[field] !== true) return false; // valid for field
     if (candidate.runDegraded === true) return false; // not from a degraded run
-    if (!compatible(candidate.parserVersion, current.parserVersion)) return false;
+    if (!compatible(candidate.parserVersion, current.parserVersion))
+      return false;
     return true;
   });
 

@@ -48,7 +48,10 @@ export default async function WatchlistsPage() {
 
       {canCreate ? (
         <div className="mb-6 rounded-lg border border-border p-4">
-          <ActionForm action={createWatchlistAction} submitLabel="Create watchlist">
+          <ActionForm
+            action={createWatchlistAction}
+            submitLabel="Create watchlist"
+          >
             <label className="flex flex-col gap-1 text-sm">
               <span className="font-medium">Name</span>
               <input
@@ -93,7 +96,9 @@ export default async function WatchlistsPage() {
             <TableBody>
               {watchlists.map((watchlist) => (
                 <TableRow key={watchlist.id}>
-                  <TableCell className="font-medium">{watchlist.name}</TableCell>
+                  <TableCell className="font-medium">
+                    {watchlist.name}
+                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {watchlist.description ?? "—"}
                   </TableCell>

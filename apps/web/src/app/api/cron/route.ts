@@ -52,10 +52,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     if (error) throw error;
     return NextResponse.json({ ok: true, enqueued: data ?? 0 });
   } catch {
-    return NextResponse.json(
-      { error: "enqueue failed" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "enqueue failed" }, { status: 500 });
   }
 }
 

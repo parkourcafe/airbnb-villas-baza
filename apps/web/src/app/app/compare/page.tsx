@@ -86,7 +86,8 @@ export default async function ComparePage({
               >
                 {snapshots.map((snapshot) => (
                   <option key={snapshot.id} value={snapshot.id}>
-                    {formatDate(snapshot.observedAt)} · {snapshot.observationStatus}
+                    {formatDate(snapshot.observedAt)} ·{" "}
+                    {snapshot.observationStatus}
                   </option>
                 ))}
               </select>

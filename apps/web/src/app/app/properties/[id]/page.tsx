@@ -64,9 +64,12 @@ export default async function PropertyDetailPage({
     ? canManageOrganization(ctx.selectedOrganization.role)
     : false;
   const mergeCandidates = canMerge
-    ? (await listProperties(supabase, property.datasetId))
-        .items.filter((candidate) => candidate.id !== property.id)
-        .map((candidate) => ({ id: candidate.id, name: candidate.canonicalName }))
+    ? (await listProperties(supabase, property.datasetId)).items
+        .filter((candidate) => candidate.id !== property.id)
+        .map((candidate) => ({
+          id: candidate.id,
+          name: candidate.canonicalName,
+        }))
     : [];
   const mergeHistory = canMerge
     ? await listIncomingMergeRedirects(supabase, property.id)
@@ -262,10 +265,13 @@ export default async function PropertyDetailPage({
           <CardContent>
             <p className="mb-3 text-sm text-muted-foreground">
               Merge this property into a canonical one. Snapshots and source
-              listings are preserved; the duplicate is archived and the action is
-              audited.
+              listings are preserved; the duplicate is archived and the action
+              is audited.
             </p>
-            <MergeControl propertyId={property.id} candidates={mergeCandidates} />
+            <MergeControl
+              propertyId={property.id}
+              candidates={mergeCandidates}
+            />
             {mergeHistory.length > 0 ? (
               <div className="mt-6 border-t border-border pt-4">
                 <p className="mb-2 text-sm font-medium">Merge history</p>

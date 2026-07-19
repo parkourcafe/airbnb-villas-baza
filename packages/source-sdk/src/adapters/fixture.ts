@@ -116,8 +116,7 @@ export class FixtureSourceAdapter implements SourceAdapter {
     });
 
     const configured = plan.configuration.listings as
-      | FixtureListing[]
-      | undefined;
+      FixtureListing[] | undefined;
     const listings = configured ?? this.listings;
     const wanted = plan.externalIds ? new Set(plan.externalIds) : null;
 

@@ -31,7 +31,10 @@ const base: SnapshotObservation = {
 };
 
 function diff(next: Partial<SnapshotObservation>): FieldDiff[] {
-  return diffSnapshots(buildSnapshot(base), buildSnapshot({ ...base, ...next }));
+  return diffSnapshots(
+    buildSnapshot(base),
+    buildSnapshot({ ...base, ...next }),
+  );
 }
 
 function byField(diffs: FieldDiff[], name: string): FieldDiff | undefined {
@@ -48,7 +51,10 @@ describe("diffSnapshots", () => {
   });
 
   it("flags a >=5% price change as material with exact deltas", () => {
-    const d = byField(diff({ price: { amount: "3800000", currency: "IDR", unit: "night" } }), "price");
+    const d = byField(
+      diff({ price: { amount: "3800000", currency: "IDR", unit: "night" } }),
+      "price",
+    );
     expect(d?.changeKind).toBe("increased");
     expect(d?.absoluteDelta).toBe(300000);
     expect(d?.percentDelta).toBeCloseTo(0.0857, 4);
@@ -56,17 +62,24 @@ describe("diffSnapshots", () => {
   });
 
   it("keeps a sub-5% price change but marks it immaterial", () => {
-    const d = byField(diff({ price: { amount: "3550000", currency: "IDR", unit: "night" } }), "price");
+    const d = byField(
+      diff({ price: { amount: "3550000", currency: "IDR", unit: "night" } }),
+      "price",
+    );
     expect(d?.isMaterial).toBe(false);
     expect(d?.absoluteDelta).toBe(50000);
   });
 
   it("does not compare prices in different currencies (scenario 13)", () => {
-    expect(diff({ price: { amount: "250", currency: "USD", unit: "night" } })).toEqual([]);
+    expect(
+      diff({ price: { amount: "250", currency: "USD", unit: "night" } }),
+    ).toEqual([]);
   });
 
   it("does not compare night vs stay pricing", () => {
-    expect(diff({ price: { amount: "3500000", currency: "IDR", unit: "stay" } })).toEqual([]);
+    expect(
+      diff({ price: { amount: "3500000", currency: "IDR", unit: "stay" } }),
+    ).toEqual([]);
   });
 
   it("flags a rating change of at least 0.05 as material", () => {
@@ -98,14 +111,22 @@ describe("diffSnapshots", () => {
   });
 
   it("detects boolean, host and location changes", () => {
-    expect(byField(diff({ isSuperhost: false }), "is_superhost")?.changeKind).toBe("changed");
-    expect(byField(diff({ hostExternalId: "host-2" }), "host_external_id")?.isMaterial).toBe(true);
+    expect(
+      byField(diff({ isSuperhost: false }), "is_superhost")?.changeKind,
+    ).toBe("changed");
+    expect(
+      byField(diff({ hostExternalId: "host-2" }), "host_external_id")
+        ?.isMaterial,
+    ).toBe(true);
     const loc = byField(diff({ latitude: -8.5 }), "location");
     expect(loc?.fieldKind).toBe("location");
   });
 
   it("records added/removed direct channels", () => {
-    const added = byField(diff({ directBookingUrl: "https://book.example/x" }), "direct_booking_url");
+    const added = byField(
+      diff({ directBookingUrl: "https://book.example/x" }),
+      "direct_booking_url",
+    );
     expect(added?.changeKind).toBe("added");
     expect(added?.previousValue).toBeNull();
   });
@@ -119,7 +140,11 @@ describe("diffSnapshots", () => {
 
   it("suppresses all diffs when parsers are incompatible (scenario 11)", () => {
     const prev = buildSnapshot(base);
-    const curr = buildSnapshot({ ...base, parserVersion: "csv:v2", rating: 4.0 });
+    const curr = buildSnapshot({
+      ...base,
+      parserVersion: "csv:v2",
+      rating: 4.0,
+    });
     expect(diffSnapshots(prev, curr)).toEqual([]);
     // Explicitly asserting compatibility re-enables the diff.
     expect(

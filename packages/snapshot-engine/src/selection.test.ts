@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  type ComparableCandidate,
-  selectComparableSnapshot,
-} from "./index";
+import { type ComparableCandidate, selectComparableSnapshot } from "./index";
 
 const present = (fields: string[]): Record<string, boolean> =>
   Object.fromEntries(fields.map((f) => [f, true]));
@@ -26,17 +23,26 @@ const candidates: ComparableCandidate[] = [
 
 describe("selectComparableSnapshot", () => {
   it("picks the latest earlier snapshot valid for the field", () => {
-    expect(selectComparableSnapshot(current, candidates, "rating")?.id).toBe("s2");
+    expect(selectComparableSnapshot(current, candidates, "rating")?.id).toBe(
+      "s2",
+    );
   });
 
   it("skips snapshots that did not collect the field", () => {
     // s2 lacks price, so price falls back to the older s1.
-    expect(selectComparableSnapshot(current, candidates, "price")?.id).toBe("s1");
+    expect(selectComparableSnapshot(current, candidates, "price")?.id).toBe(
+      "s1",
+    );
   });
 
   it("never selects a snapshot at or after the current time", () => {
-    const later = { observedAt: "2026-07-18T00:00:00Z", parserVersion: "csv:v1" };
-    expect(selectComparableSnapshot(later, candidates, "rating")?.id).toBe("s1");
+    const later = {
+      observedAt: "2026-07-18T00:00:00Z",
+      parserVersion: "csv:v1",
+    };
+    expect(selectComparableSnapshot(later, candidates, "rating")?.id).toBe(
+      "s1",
+    );
   });
 
   it("excludes degraded-run snapshots", () => {

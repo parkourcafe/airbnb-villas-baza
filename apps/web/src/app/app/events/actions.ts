@@ -78,7 +78,8 @@ export async function createLeadFromEventAction(
 ): Promise<CreateLeadState> {
   const propertyId = String(formData.get("propertyId") ?? "");
   const eventId = String(formData.get("eventId") ?? "") || undefined;
-  const sourceListingId = String(formData.get("sourceListingId") ?? "") || undefined;
+  const sourceListingId =
+    String(formData.get("sourceListingId") ?? "") || undefined;
   if (!propertyId) return { error: "Missing property." };
 
   const ctx = await loadTenancyContext();

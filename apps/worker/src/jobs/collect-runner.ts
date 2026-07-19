@@ -8,7 +8,10 @@ import type {
 import type { ParsedImportRow } from "@bai/import-engine";
 import { logger } from "../observability/logger";
 import type { CollectionJob } from "./queue";
-import { persistAcceptedRow, type SnapshotPersistCtx } from "./snapshot-persistence";
+import {
+  persistAcceptedRow,
+  type SnapshotPersistCtx,
+} from "./snapshot-persistence";
 
 export interface CollectRunnerDeps {
   sql: Sql;

@@ -65,7 +65,9 @@ export interface LifecycleState {
   transitionSequence: number;
 }
 
-export function initialLifecycleState(firstObservedAt?: string): LifecycleState {
+export function initialLifecycleState(
+  firstObservedAt?: string,
+): LifecycleState {
   return {
     status: "active",
     confidence: "low",
@@ -245,7 +247,12 @@ function applyActive(
           eventType: "reactivated",
           eventAt: obs.observedAt,
           confidence: "high",
-          dedupeKey: dedupeKey("listing_reactivated", listingId, obs.snapshotId, rv),
+          dedupeKey: dedupeKey(
+            "listing_reactivated",
+            listingId,
+            obs.snapshotId,
+            rv,
+          ),
           previousStatus: prev.status,
           currentStatus: "reactivated",
           snapshotId: obs.snapshotId,
@@ -279,7 +286,8 @@ function applyMiss(
   const distinctRuns = prev.distinctMissRuns + (newRun ? 1 : 0);
   const highConf =
     prev.highConfidenceNotFoundInSequence ||
-    (obs.observationStatus === "not_found" && obs.highConfidenceNotFound === true);
+    (obs.observationStatus === "not_found" &&
+      obs.highConfidenceNotFound === true);
 
   const working: LifecycleState = {
     ...base,
@@ -330,7 +338,11 @@ function applyMiss(
     };
   }
 
-  if (suspected && prev.status !== "suspected_inactive" && prev.status !== "confirmed_inactive") {
+  if (
+    suspected &&
+    prev.status !== "suspected_inactive" &&
+    prev.status !== "confirmed_inactive"
+  ) {
     const seq = prev.transitionSequence + 1;
     const next: LifecycleState = {
       ...working,

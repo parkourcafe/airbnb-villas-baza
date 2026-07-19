@@ -60,9 +60,9 @@ export class CsvSourceAdapter implements SourceAdapter {
         sourceKey: this.definition.key,
         externalId: String(row.external_id ?? ""),
         observedAt: String(row.observed_at ?? plan.requestedAt),
-        observationStatus: (String(
+        observationStatus: String(
           row.observation_status ?? "unknown",
-        ) as ObservationStatus),
+        ) as ObservationStatus,
         sourceUrl: row.source_url ? String(row.source_url) : undefined,
         payload: row,
         evidence: { method: "manual_csv" },

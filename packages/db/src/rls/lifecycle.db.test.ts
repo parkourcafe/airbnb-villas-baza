@@ -60,7 +60,9 @@ describe("lifecycle and event persistence", () => {
     expect(evidence.rows.length).toBeGreaterThanOrEqual(1);
 
     await ctx.actAs(ctx.ids.owner2);
-    expect((await ctx.db.query(`select id from public.events`)).rows).toHaveLength(0);
+    expect(
+      (await ctx.db.query(`select id from public.events`)).rows,
+    ).toHaveLength(0);
     expect(
       (await ctx.db.query(`select id from public.event_evidence`)).rows,
     ).toHaveLength(0);

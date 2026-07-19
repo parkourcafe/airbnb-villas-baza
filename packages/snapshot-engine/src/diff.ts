@@ -15,11 +15,7 @@ const EPSILON = 1e-9;
 
 /** The semantic nature of an observed change. */
 export type DiffChangeKind =
-  | "added"
-  | "removed"
-  | "increased"
-  | "decreased"
-  | "changed";
+  "added" | "removed" | "increased" | "decreased" | "changed";
 
 /**
  * A single field-level difference between two comparable snapshots. Mirrors the
@@ -75,15 +71,21 @@ export function diffSnapshots(
   current: BuiltSnapshot,
   options: DiffOptions = {},
 ): FieldDiff[] {
-  const materiality = resolveMateriality(options.materiality ?? DEFAULT_MATERIALITY);
+  const materiality = resolveMateriality(
+    options.materiality ?? DEFAULT_MATERIALITY,
+  );
   const parserCompatible =
-    options.parserCompatible ?? previous.parserVersion === current.parserVersion;
+    options.parserCompatible ??
+    previous.parserVersion === current.parserVersion;
   if (!parserCompatible) return [];
 
   const diffs: FieldDiff[] = [];
   for (const spec of SNAPSHOT_FIELDS) {
     // Skip fields not collected on either side — cannot be compared.
-    if (!previous.fieldPresence[spec.name] || !current.fieldPresence[spec.name]) {
+    if (
+      !previous.fieldPresence[spec.name] ||
+      !current.fieldPresence[spec.name]
+    ) {
       continue;
     }
     const diff = diffField(spec, previous, current, materiality);

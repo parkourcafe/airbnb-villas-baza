@@ -109,10 +109,16 @@ function runPollLoop(config: WorkerConfig): Promise<void> {
     const hasStorage = Boolean(config.supabaseUrl && config.serviceRoleKey);
     const jobDeps: JobDeps = {
       loadCsv: hasStorage
-        ? createCsvLoader(config.supabaseUrl as string, config.serviceRoleKey as string)
+        ? createCsvLoader(
+            config.supabaseUrl as string,
+            config.serviceRoleKey as string,
+          )
         : undefined,
       uploadCsv: hasStorage
-        ? createCsvUploader(config.supabaseUrl as string, config.serviceRoleKey as string)
+        ? createCsvUploader(
+            config.supabaseUrl as string,
+            config.serviceRoleKey as string,
+          )
         : undefined,
       registry: buildRegistry(),
     };

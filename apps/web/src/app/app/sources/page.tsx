@@ -129,7 +129,10 @@ export default async function SourcesPage() {
               No approved, automation-allowed source is available to schedule.
             </p>
           ) : (
-            <ActionForm action={createScheduleAction} submitLabel="Add schedule">
+            <ActionForm
+              action={createScheduleAction}
+              submitLabel="Add schedule"
+            >
               <label className="flex flex-col gap-1 text-sm">
                 <span className="font-medium">Source</span>
                 <select
