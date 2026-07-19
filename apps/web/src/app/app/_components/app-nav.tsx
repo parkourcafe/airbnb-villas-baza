@@ -10,6 +10,8 @@ const NAV = [
   { href: "/app/map", label: "Map" },
   { href: "/app/events", label: "Events" },
   { href: "/app/imports", label: "Imports" },
+  { href: "/app/collections", label: "Collections" },
+  { href: "/app/snapshots", label: "Snapshots" },
   { href: "/app/sources", label: "Sources" },
   { href: "/app/watchlists", label: "Watchlists" },
   { href: "/app/leads", label: "Leads" },

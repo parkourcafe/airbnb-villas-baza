@@ -10,6 +10,15 @@ test("unauthenticated access to /app is redirected to login (AUTH-01)", async ({
   ).toBeVisible();
 });
 
+test("unauthenticated access to /app/collections and /app/snapshots is redirected", async ({
+  page,
+}) => {
+  await page.goto("/app/collections");
+  await expect(page).toHaveURL(/\/login\?next=/);
+  await page.goto("/app/snapshots");
+  await expect(page).toHaveURL(/\/login\?next=/);
+});
+
 test("the login page renders the credentials form", async ({ page }) => {
   await page.goto("/login");
   await expect(page.getByLabel("Email")).toBeVisible();

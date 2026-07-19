@@ -649,6 +649,247 @@ export interface Database {
         };
         Relationships: [];
       };
+      browser_collections: {
+        Row: {
+          id: string;
+          organization_id: string;
+          dataset_id: string;
+          source_id: string;
+          source_key: string;
+          market: string;
+          mode: Database["public"]["Enums"]["collection_mode"];
+          state: Database["public"]["Enums"]["collection_job_state"];
+          headed: boolean;
+          collect_details: boolean;
+          max_listings: number | null;
+          min_rating: number | null;
+          min_review_count: number | null;
+          selected_areas: string[];
+          requested_start_at: string | null;
+          source_snapshot_id: string | null;
+          config: Json;
+          planned_cells: number;
+          completed_cells: number;
+          cards_discovered: number;
+          unique_listings: number;
+          duplicate_discoveries: number;
+          detail_pages_completed: number;
+          warning_count: number;
+          error_count: number;
+          current_area: string | null;
+          current_cell: string | null;
+          manual_action_reason:
+            Database["public"]["Enums"]["manual_action_reason"] | null;
+          manual_action_detail: string | null;
+          locked_by: string | null;
+          locked_at: string | null;
+          heartbeat_at: string | null;
+          requested_by: string | null;
+          started_at: string | null;
+          finished_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          dataset_id: string;
+          source_id: string;
+          source_key: string;
+          market?: string;
+          mode?: Database["public"]["Enums"]["collection_mode"];
+          state?: Database["public"]["Enums"]["collection_job_state"];
+          headed?: boolean;
+          collect_details?: boolean;
+          max_listings?: number | null;
+          min_rating?: number | null;
+          min_review_count?: number | null;
+          selected_areas?: string[];
+          requested_start_at?: string | null;
+          source_snapshot_id?: string | null;
+          config?: Json;
+        };
+        Update: {
+          state?: Database["public"]["Enums"]["collection_job_state"];
+          manual_action_reason?:
+            Database["public"]["Enums"]["manual_action_reason"] | null;
+          manual_action_detail?: string | null;
+          finished_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      collection_search_cells: {
+        Row: {
+          id: string;
+          collection_id: string;
+          dataset_id: string;
+          parent_area: string;
+          north: number;
+          south: number;
+          east: number;
+          west: number;
+          zoom: number;
+          status: Database["public"]["Enums"]["search_cell_status"];
+          listings_discovered: number;
+          started_at: string | null;
+          completed_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          collection_id: string;
+          dataset_id: string;
+          parent_area: string;
+          north: number;
+          south: number;
+          east: number;
+          west: number;
+          zoom: number;
+          status?: Database["public"]["Enums"]["search_cell_status"];
+        };
+        Update: {
+          status?: Database["public"]["Enums"]["search_cell_status"];
+          listings_discovered?: number;
+          started_at?: string | null;
+          completed_at?: string | null;
+        };
+        Relationships: [];
+      };
+      collection_observations: {
+        Row: {
+          id: string;
+          collection_id: string;
+          dataset_id: string;
+          source_id: string;
+          source_listing_id: string;
+          source_url: string | null;
+          title: string | null;
+          area: string | null;
+          rating: number | null;
+          review_count: number | null;
+          displayed_price: string | null;
+          currency: string | null;
+          guest_capacity: number | null;
+          bedrooms: number | null;
+          latitude: number | null;
+          longitude: number | null;
+          image_url: string | null;
+          discovery_cell_ids: string[];
+          discovery_count: number;
+          detail_collected: boolean;
+          detail_observed_status:
+            Database["public"]["Enums"]["detail_observed_status"] | null;
+          detail: Json | null;
+          raw_payload: Json;
+          observed_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          collection_id: string;
+          dataset_id: string;
+          source_id: string;
+          source_listing_id: string;
+          observed_at: string;
+        };
+        Update: {
+          detail_collected?: boolean;
+          detail_observed_status?:
+            Database["public"]["Enums"]["detail_observed_status"] | null;
+          detail?: Json | null;
+        };
+        Relationships: [];
+      };
+      market_snapshots: {
+        Row: {
+          id: string;
+          dataset_id: string;
+          collection_id: string | null;
+          source_id: string;
+          source_key: string;
+          market: string;
+          observation_started_at: string | null;
+          observation_completed_at: string | null;
+          unique_listing_count: number;
+          search_cell_coverage: number;
+          completion_percentage: number;
+          quality_status: Database["public"]["Enums"]["snapshot_quality_status"];
+          warning_count: number;
+          checksum: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          dataset_id: string;
+          collection_id?: string | null;
+          source_id: string;
+          source_key: string;
+          market: string;
+          quality_status: Database["public"]["Enums"]["snapshot_quality_status"];
+          checksum: string;
+        };
+        Update: {
+          quality_status?: Database["public"]["Enums"]["snapshot_quality_status"];
+        };
+        Relationships: [];
+      };
+      market_snapshot_listings: {
+        Row: {
+          id: string;
+          snapshot_id: string;
+          dataset_id: string;
+          source_listing_id: string;
+          source_url: string | null;
+          title: string | null;
+          area: string | null;
+          rating: number | null;
+          review_count: number | null;
+          displayed_price: string | null;
+          currency: string | null;
+          guest_capacity: number | null;
+          bedrooms: number | null;
+          latitude: number | null;
+          longitude: number | null;
+          detail: Json | null;
+          payload: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          snapshot_id: string;
+          dataset_id: string;
+          source_listing_id: string;
+        };
+        Update: Record<never, never>;
+        Relationships: [];
+      };
+      listing_verifications: {
+        Row: {
+          id: string;
+          collection_id: string;
+          dataset_id: string;
+          source_id: string;
+          source_listing_id: string;
+          source_url: string | null;
+          status: Database["public"]["Enums"]["listing_verification_status"];
+          previous_snapshot_id: string | null;
+          observed_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          collection_id: string;
+          dataset_id: string;
+          source_id: string;
+          source_listing_id: string;
+          status: Database["public"]["Enums"]["listing_verification_status"];
+          observed_at: string;
+        };
+        Update: Record<never, never>;
+        Relationships: [];
+      };
     };
     Views: {
       import_sources: {
@@ -673,6 +914,16 @@ export interface Database {
           review_expires_at: string | null;
           restriction_reason: string | null;
           rate_limit_policy: Json | null;
+        };
+        Relationships: [];
+      };
+      browser_collection_sources: {
+        Row: {
+          id: string;
+          key: string;
+          display_name: string;
+          access_mode: string;
+          compliance_status: string;
         };
         Relationships: [];
       };
@@ -758,6 +1009,52 @@ export interface Database {
         | "archived";
       report_status:
         "pending" | "queued" | "running" | "ready" | "failed" | "expired";
+      collection_mode:
+        | "search_results_only"
+        | "search_and_details"
+        | "verify_existing_listings";
+      collection_job_state:
+        | "draft"
+        | "queued"
+        | "claimed"
+        | "running"
+        | "manual_action_required"
+        | "paused"
+        | "completing"
+        | "completed"
+        | "partial"
+        | "failed"
+        | "cancelled";
+      manual_action_reason:
+        | "captcha"
+        | "login_challenge"
+        | "account_verification"
+        | "access_denied"
+        | "blocking_page"
+        | "navigation_failure";
+      search_cell_status:
+        | "pending"
+        | "running"
+        | "completed"
+        | "manual_action_required"
+        | "failed"
+        | "skipped";
+      snapshot_quality_status: "complete" | "partial" | "degraded" | "failed";
+      listing_verification_status:
+        | "active"
+        | "unavailable"
+        | "not_found"
+        | "login_required"
+        | "blocked"
+        | "source_error"
+        | "unknown";
+      detail_observed_status:
+        | "collected"
+        | "unavailable"
+        | "not_found"
+        | "blocked"
+        | "error"
+        | "skipped";
     };
     CompositeTypes: Record<never, never>;
   };

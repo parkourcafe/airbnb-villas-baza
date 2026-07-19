@@ -16,6 +16,7 @@
     "clean": "rm -rf .next dist .turbo coverage playwright-report test-results *.tsbuildinfo"
   },
   "dependencies": {
+    "@bai/collector-core": "workspace:*",
     "@bai/db": "workspace:*",
     "@bai/domain": "workspace:*",
     "@bai/reporting": "workspace:*",

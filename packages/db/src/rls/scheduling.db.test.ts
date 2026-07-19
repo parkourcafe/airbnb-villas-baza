@@ -16,8 +16,11 @@ describe("source catalogue and scheduling", () => {
     // Fixture source1 is approved but automation is not implied; enable it.
     await ctx.db.exec(`
       update private.data_sources set automation_allowed = true where id = '${ctx.ids.source1}';
+      -- 'airbnb' is seeded disabled by the browser-collection migration; keep this
+      -- insert idempotent so both paths agree on a single disabled source row.
       insert into private.data_sources (id, key, display_name, access_mode, compliance_status, automation_allowed)
-      values ('${disabledSource}', 'airbnb', 'Airbnb', 'browser_automation', 'disabled', true);
+      values ('${disabledSource}', 'airbnb', 'Airbnb', 'browser_automation', 'disabled', true)
+      on conflict (key) do nothing;
     `);
   });
 
