@@ -9,6 +9,7 @@ import type {
   PropertyDetail,
   PropertySummary,
   Region,
+  SnapshotFieldDiff,
   SourceListingSummary,
 } from "@bai/domain";
 import type { Database } from "../generated/database.types";
@@ -221,6 +222,48 @@ export async function listListingSnapshots(
     observedPriceCurrency: row.observed_price_currency,
     observedPriceUnit: row.observed_price_unit,
     isSuperhost: row.is_superhost,
+  }));
+}
+
+interface SnapshotDiffRow {
+  field_name: string;
+  change_kind: string;
+  previous_value: unknown;
+  current_value: unknown;
+  absolute_delta: number | null;
+  percent_delta: number | null;
+  is_material: boolean;
+  rule_version: string;
+}
+
+/**
+ * The stored field diffs for a snapshot (its comparison against the previous
+ * comparable snapshot). Material diffs first, then by field name for a stable
+ * order.
+ */
+export async function listSnapshotDiffs(
+  client: DbClient,
+  currentSnapshotId: string,
+): Promise<SnapshotFieldDiff[]> {
+  const { data, error } = await client
+    .from("snapshot_diffs")
+    .select(
+      "field_name, change_kind, previous_value, current_value, absolute_delta, percent_delta, is_material, rule_version",
+    )
+    .eq("current_snapshot_id", currentSnapshotId)
+    .order("is_material", { ascending: false })
+    .order("field_name", { ascending: true })
+    .returns<SnapshotDiffRow[]>();
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    fieldName: row.field_name,
+    changeKind: row.change_kind,
+    previousValue: row.previous_value,
+    currentValue: row.current_value,
+    absoluteDelta: row.absolute_delta,
+    percentDelta: row.percent_delta,
+    isMaterial: row.is_material,
+    ruleVersion: row.rule_version,
   }));
 }
 

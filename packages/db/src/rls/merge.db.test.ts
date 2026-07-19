@@ -76,4 +76,55 @@ describe("property merge", () => {
       ),
     ).rejects.toThrow(/into itself/i);
   });
+
+  it("rolls back the merge precisely, restoring the duplicate", async () => {
+    await ctx.actAsSuperuser();
+    const redirect = await ctx.db.query<{ id: string }>(
+      `select id from public.property_redirects where kind = 'merge' and from_property_id = '${ctx.ids.propertyA1}'`,
+    );
+    const redirectId = redirect.rows[0]?.id;
+    expect(redirectId).toBeTruthy();
+
+    await ctx.actAs(ctx.ids.owner1);
+    await ctx.db.query(
+      `select public.rollback_merge('${redirectId}', 'undo')`,
+    );
+
+    await ctx.actAsSuperuser();
+    // Listing moved back to A1, which is un-archived again.
+    const listing = await ctx.db.query<{ property_id: string }>(
+      `select property_id from public.source_listings where id = '${ctx.ids.listingA1}'`,
+    );
+    expect(listing.rows[0]?.property_id).toBe(ctx.ids.propertyA1);
+    const restored = await ctx.db.query<{ archived_at: string | null }>(
+      `select archived_at from public.properties where id = '${ctx.ids.propertyA1}'`,
+    );
+    expect(restored.rows[0]?.archived_at).toBeNull();
+  });
+
+  it("splits a source listing into its own property (admin only)", async () => {
+    // A viewer cannot split.
+    await ctx.actAs(ctx.ids.viewer1);
+    await expect(
+      ctx.db.query(`select public.split_listing('${ctx.ids.listingA1}', 'sep')`),
+    ).rejects.toThrow(/not authorized/i);
+
+    await ctx.actAs(ctx.ids.owner1);
+    const result = await ctx.db.query<{ split_listing: string }>(
+      `select public.split_listing('${ctx.ids.listingA1}', 'separate listing') as split_listing`,
+    );
+    const newPropertyId = result.rows[0]?.split_listing;
+    expect(newPropertyId).toBeTruthy();
+
+    await ctx.actAsSuperuser();
+    const listing = await ctx.db.query<{ property_id: string }>(
+      `select property_id from public.source_listings where id = '${ctx.ids.listingA1}'`,
+    );
+    expect(listing.rows[0]?.property_id).toBe(newPropertyId);
+    // The snapshot is preserved through the split.
+    const snapshot = await ctx.db.query(
+      `select id from public.listing_snapshots where id = '${ctx.ids.snapshotA1}'`,
+    );
+    expect(snapshot.rows).toHaveLength(1);
+  });
 });

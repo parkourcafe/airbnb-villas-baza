@@ -5,6 +5,7 @@ import {
   getProperty,
   listEvents,
   listEvidenceForEvents,
+  listIncomingMergeRedirects,
   listProperties,
   listSourceListings,
 } from "@bai/db";
@@ -37,6 +38,7 @@ import { PageHeader } from "../../_components/page-parts";
 import { LifecycleBadge } from "../../_components/lifecycle-badge";
 import { EvidenceSheet } from "../../_components/evidence-sheet";
 import { MergeControl } from "./merge-control";
+import { RollbackButton, SplitButton } from "./resolution-controls";
 
 export const metadata: Metadata = { title: "Property" };
 
@@ -65,6 +67,9 @@ export default async function PropertyDetailPage({
     ? (await listProperties(supabase, property.datasetId))
         .items.filter((candidate) => candidate.id !== property.id)
         .map((candidate) => ({ id: candidate.id, name: candidate.canonicalName }))
+    : [];
+  const mergeHistory = canMerge
+    ? await listIncomingMergeRedirects(supabase, property.id)
     : [];
 
   const [listings, events] = await Promise.all([
@@ -163,6 +168,7 @@ export default async function PropertyDetailPage({
                     <TableHead>Status</TableHead>
                     <TableHead>Lifecycle</TableHead>
                     <TableHead>Last observed</TableHead>
+                    <TableHead className="text-right">Snapshots</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -187,6 +193,19 @@ export default async function PropertyDetailPage({
                       </TableCell>
                       <TableCell>
                         {formatDate(listing.lastObservedAt)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Link
+                            href={`/app/compare?listing=${listing.id}`}
+                            className="text-sm text-muted-foreground underline-offset-2 hover:underline"
+                          >
+                            Compare
+                          </Link>
+                          {canMerge ? (
+                            <SplitButton sourceListingId={listing.id} />
+                          ) : null}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -247,6 +266,26 @@ export default async function PropertyDetailPage({
               audited.
             </p>
             <MergeControl propertyId={property.id} candidates={mergeCandidates} />
+            {mergeHistory.length > 0 ? (
+              <div className="mt-6 border-t border-border pt-4">
+                <p className="mb-2 text-sm font-medium">Merge history</p>
+                <ul className="space-y-2">
+                  {mergeHistory.map((redirect) => (
+                    <li
+                      key={redirect.id}
+                      className="flex items-center justify-between gap-3 text-sm"
+                    >
+                      <span className="text-muted-foreground">
+                        Merged {redirect.fromPropertyId.slice(0, 8)}… on{" "}
+                        {formatDate(redirect.createdAt)}
+                        {redirect.reason ? ` — ${redirect.reason}` : ""}
+                      </span>
+                      <RollbackButton redirectId={redirect.id} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       ) : null}

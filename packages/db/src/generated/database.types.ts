@@ -606,6 +606,22 @@ export interface Database {
         };
         Relationships: [];
       };
+      property_redirects: {
+        Row: {
+          id: string;
+          dataset_id: string;
+          from_property_id: string;
+          to_property_id: string;
+          reason: string | null;
+          kind: string;
+          moved_source_listing_ids: string[];
+          created_by: string;
+          created_at: string;
+        };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [];
+      };
     };
     Views: {
       import_sources: {
@@ -621,6 +637,14 @@ export interface Database {
     Functions: {
       merge_properties: {
         Args: { p_from: string; p_to: string; p_reason?: string | null };
+        Returns: undefined;
+      };
+      split_listing: {
+        Args: { p_source_listing: string; p_reason?: string | null };
+        Returns: string;
+      };
+      rollback_merge: {
+        Args: { p_redirect: string; p_reason?: string | null };
         Returns: undefined;
       };
     };
