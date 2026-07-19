@@ -1,0 +1,31 @@
+{
+  "name": "@bai/source-sdk",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Source adapter contract, capability model and the compliance gate that guards every automated collection run.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf .turbo coverage *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@bai/domain": "workspace:*"
+  },
+  "devDependencies": {
+    "@bai/config": "workspace:*",
+    "@types/node": "22.20.1",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}

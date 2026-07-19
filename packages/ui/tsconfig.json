@@ -1,0 +1,9 @@
+{
+  "extends": "@bai/config/tsconfig/react-library.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "types": ["node", "react", "react-dom"]
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "*.ts", "*.mjs"],
+  "exclude": ["node_modules", "dist", ".turbo"]
+}

@@ -1,0 +1,2 @@
+source_key,external_id,source_url,title,observed_at,observation_status,region,latitude,longitude,rating,review_count,observed_price_amount,observed_price_currency,observed_price_unit,bedrooms,bathrooms,guest_capacity,is_superhost,host_external_id,official_website,business_whatsapp,direct_booking_url,canonical_property_key
+demo_fixture,demo-002,https://fixture.local/listing/demo-002,Villa Sora,2026-08-01T00:00:00Z,active,Uluwatu,-8.8291,115.0849,4.89,99,4200000,IDR,night,4,4,8,true,host-002,https://villasora.example,+628144444444,https://villasora.example/book,villa-sora

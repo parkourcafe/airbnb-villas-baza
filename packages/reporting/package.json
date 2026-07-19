@@ -1,0 +1,28 @@
+{
+  "name": "@bai/reporting",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Report definitions and async CSV/export generation. Milestone 0 ships the spreadsheet-injection-safe CSV cell encoder.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf .turbo coverage *.tsbuildinfo"
+  },
+  "devDependencies": {
+    "@bai/config": "workspace:*",
+    "@types/node": "22.20.1",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}

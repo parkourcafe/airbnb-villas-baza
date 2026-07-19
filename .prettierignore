@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.next/
+.turbo/
+coverage/
+playwright-report/
+test-results/
+pnpm-lock.yaml
+*.tsbuildinfo
+
+# Reference specification bundle - kept verbatim, not reformatted.
+docs/bai_codex_spec/
+# Root AGENTS.md is a verbatim copy of the spec bundle's AGENTS.md.
+AGENTS.md
