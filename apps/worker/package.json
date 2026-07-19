@@ -18,6 +18,7 @@
   "dependencies": {
     "@bai/db": "workspace:*",
     "@bai/domain": "workspace:*",
+    "@bai/event-engine": "workspace:*",
     "@bai/import-engine": "workspace:*",
     "@bai/snapshot-engine": "workspace:*",
     "@bai/source-sdk": "workspace:*",

@@ -4,10 +4,24 @@ import {
   type BuiltSnapshot,
   buildSnapshot,
   DEFAULT_MATERIALITY,
+  type FieldDiff,
   diffSnapshots,
   type SnapshotObservation,
 } from "@bai/snapshot-engine";
+import {
+  fieldChangeEvents,
+  type LifecycleObservation,
+  type LifecycleState,
+  reduceLifecycle,
+} from "@bai/event-engine";
 import type { ParsedImportRow } from "@bai/import-engine";
+import {
+  auxState,
+  insertEvent,
+  type LifecycleListingRow,
+  newListingState,
+  stateFromRow,
+} from "./lifecycle-persistence";
 
 /** Context shared by every accepted row in one import/collection run. */
 export interface SnapshotPersistCtx {
@@ -15,6 +29,8 @@ export interface SnapshotPersistCtx {
   sourceId: string;
   runId: string;
   parserVersion: string;
+  /** The collection run is degraded; lifecycle transitions are suppressed. */
+  runDegraded?: boolean;
 }
 
 const PRICE_UNITS: readonly PriceUnit[] = ["night", "stay", "unknown"];
@@ -151,18 +167,35 @@ function snapshotFromRow(row: SnapshotRow): BuiltSnapshot {
  * `canonical_property_key` reuses the matching property (via `property_aliases`),
  * otherwise a new property is created per new source listing.
  */
+interface ResolvedListing {
+  id: string;
+  propertyId: string;
+  isNew: boolean;
+  state: LifecycleState;
+}
+
 async function resolveSourceListing(
   tx: TransactionSql,
   ctx: SnapshotPersistCtx,
   row: ParsedImportRow,
-): Promise<string> {
-  const existing = await tx<{ id: string }[]>`
-    select id from public.source_listings
+): Promise<ResolvedListing> {
+  const existing = await tx<(LifecycleListingRow & { id: string; property_id: string })[]>`
+    select id, property_id, current_lifecycle_status, current_confidence,
+           consecutive_misses, last_seen_active_at, last_observed_at, first_miss_at,
+           suspected_inactive_at, confirmed_inactive_at, reactivated_at, lifecycle_state
+    from public.source_listings
     where dataset_id = ${ctx.datasetId}
       and source_id = ${ctx.sourceId}
       and external_id = ${row.externalId}
   `;
-  if (existing[0]) return existing[0].id;
+  if (existing[0]) {
+    return {
+      id: existing[0].id,
+      propertyId: existing[0].property_id,
+      isNew: false,
+      state: stateFromRow(existing[0]),
+    };
+  }
 
   const propertyId = await resolveProperty(tx, ctx, row);
   const [inserted] = await tx<{ id: string }[]>`
@@ -179,7 +212,12 @@ async function resolveSourceListing(
        ${row.businessWhatsapp ?? null}, ${row.directBookingUrl ?? null})
     returning id
   `;
-  return inserted!.id;
+  return {
+    id: inserted!.id,
+    propertyId,
+    isNew: true,
+    state: newListingState(row.observedAt),
+  };
 }
 
 async function resolveProperty(
@@ -264,13 +302,18 @@ async function insertSnapshot(
  * diffs against `current`. Diffs are inserted with a unique key so a repeated
  * run never duplicates them (04 §14).
  */
+interface DiffOutcome {
+  previousSnapshotId: string | null;
+  diffs: FieldDiff[];
+}
+
 async function persistDiffs(
   tx: TransactionSql,
   ctx: SnapshotPersistCtx,
   sourceListingId: string,
   currentSnapshotId: string,
   current: BuiltSnapshot,
-): Promise<void> {
+): Promise<DiffOutcome> {
   const [previous] = await tx<SnapshotRow[]>`
     select s.* from public.listing_snapshots s
     join private.collection_runs r on r.id = s.collection_run_id
@@ -281,7 +324,7 @@ async function persistDiffs(
     order by s.observed_at desc
     limit 1
   `;
-  if (!previous) return;
+  if (!previous) return { previousSnapshotId: null, diffs: [] };
 
   const diffs = diffSnapshots(snapshotFromRow(previous), current);
   for (const diff of diffs) {
@@ -298,6 +341,7 @@ async function persistDiffs(
       on conflict (current_snapshot_id, field_name, rule_version) do nothing
     `;
   }
+  return { previousSnapshotId: previous.id, diffs };
 }
 
 /**
@@ -310,28 +354,152 @@ export async function persistAcceptedRow(
   ctx: SnapshotPersistCtx,
   row: ParsedImportRow,
 ): Promise<void> {
-  const sourceListingId = await resolveSourceListing(tx, ctx, row);
+  const listing = await resolveSourceListing(tx, ctx, row);
   const built = buildSnapshot(observationFromImportRow(row, ctx.parserVersion));
   const { id: snapshotId, created } = await insertSnapshot(
     tx,
     ctx,
-    sourceListingId,
+    listing.id,
     built,
   );
-  if (!created) return; // replay: snapshot + diffs already persisted.
+  if (!created) return; // replay: snapshot + diffs + events already persisted.
 
-  await persistDiffs(tx, ctx, sourceListingId, snapshotId, built);
+  const { previousSnapshotId, diffs } = await persistDiffs(
+    tx,
+    ctx,
+    listing.id,
+    snapshotId,
+    built,
+  );
 
+  await persistEvents(tx, ctx, listing, snapshotId, previousSnapshotId, built, diffs);
+}
+
+const firstSeenDate = (observedAt: string): string => observedAt.slice(0, 10);
+
+/**
+ * Persist the derived events for one observation: a `listing_created` event on
+ * first sight, material field-change events from the diffs, and lifecycle
+ * transition events from the reducer — then update the listing's authoritative
+ * lifecycle projection. All events are evidence-backed and de-duplicated.
+ */
+async function persistEvents(
+  tx: TransactionSql,
+  ctx: SnapshotPersistCtx,
+  listing: ResolvedListing,
+  snapshotId: string,
+  previousSnapshotId: string | null,
+  built: BuiltSnapshot,
+  diffs: FieldDiff[],
+): Promise<void> {
+  if (listing.isNew) {
+    await insertEvent(
+      tx,
+      {
+        datasetId: ctx.datasetId,
+        propertyId: listing.propertyId,
+        sourceListingId: listing.id,
+        eventType: "listing_created",
+        eventAt: built.observedAt,
+        confidence: "high",
+        dedupeKey: `listing_created:${listing.id}:${firstSeenDate(built.observedAt)}:${SNAPSHOT_RULE_VERSION}`,
+        summary: "Source listing first observed.",
+        ruleVersion: SNAPSHOT_RULE_VERSION,
+      },
+      {
+        currentSnapshotId: snapshotId,
+        collectionRunId: ctx.runId,
+        evidenceType: "snapshot",
+        explanation: "First observation snapshot for this source listing.",
+      },
+    );
+  }
+
+  for (const event of fieldChangeEvents(diffs, {
+    sourceListingId: listing.id,
+    runId: ctx.runId,
+    observedAt: built.observedAt,
+  })) {
+    await insertEvent(
+      tx,
+      {
+        datasetId: ctx.datasetId,
+        propertyId: listing.propertyId,
+        sourceListingId: listing.id,
+        eventType: event.eventType,
+        eventAt: event.eventAt,
+        confidence: event.confidence,
+        dedupeKey: event.dedupeKey,
+        summary: event.explanation,
+        previousValue: event.previousValue,
+        currentValue: event.currentValue,
+        ruleVersion: event.ruleVersion,
+      },
+      {
+        previousSnapshotId,
+        currentSnapshotId: snapshotId,
+        collectionRunId: ctx.runId,
+        evidenceType: "diff",
+        explanation: event.explanation,
+        metadata: { field: event.fieldName },
+      },
+    );
+  }
+
+  const observation: LifecycleObservation = {
+    observationStatus: built.observationStatus,
+    observedAt: built.observedAt,
+    snapshotId,
+    runId: ctx.runId,
+  };
+  const result = reduceLifecycle(listing.state, observation, listing.id, {
+    runDegraded: ctx.runDegraded ?? false,
+  });
+
+  for (const event of result.events) {
+    await insertEvent(
+      tx,
+      {
+        datasetId: ctx.datasetId,
+        propertyId: listing.propertyId,
+        sourceListingId: listing.id,
+        eventType: event.eventType,
+        eventAt: event.eventAt,
+        confidence: event.confidence,
+        dedupeKey: event.dedupeKey,
+        summary: event.explanation,
+        previousValue: event.previousStatus,
+        currentValue: event.currentStatus,
+        ruleVersion: event.ruleVersion,
+      },
+      {
+        currentSnapshotId: snapshotId,
+        collectionRunId: ctx.runId,
+        evidenceType: "lifecycle",
+        explanation: event.explanation,
+        metadata: { confidence: event.confidence, ruleVersion: event.ruleVersion },
+      },
+    );
+  }
+
+  const next = result.state;
   await tx`
     update public.source_listings
     set latest_snapshot_id = ${snapshotId},
         current_title = ${built.title},
         current_observation_status = ${built.observationStatus},
+        current_lifecycle_status = ${next.status},
+        current_confidence = ${next.confidence},
+        consecutive_misses = ${next.consecutiveMisses},
+        first_miss_at = ${next.firstMissAt},
+        suspected_inactive_at = ${next.suspectedInactiveAt},
+        confirmed_inactive_at = ${next.confirmedInactiveAt},
+        reactivated_at = ${next.reactivatedAt},
         last_observed_at = ${built.observedAt},
-        last_seen_active_at = case when ${built.observationStatus} = 'active'
-          then ${built.observedAt} else last_seen_active_at end,
+        last_seen_active_at = ${next.lastSeenActiveAt},
+        lifecycle_state = ${tx.json(auxState(next))},
         updated_at = now()
-    where id = ${sourceListingId}
+    where id = ${listing.id}
   `;
 }
 

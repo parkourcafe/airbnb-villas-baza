@@ -5,9 +5,25 @@ This document tracks milestone progress for Bali Accommodation Intelligence
 
 ## Current state
 
-- **Completed:** Milestones 0–4 (foundation · auth/tenancy · core catalogue · CSV import · snapshot & diff engine)
-- **Next milestone:** Milestone 5 — Lifecycle & event engine
+- **Completed:** Milestones 0–5 (foundation · auth/tenancy · core catalogue · CSV import · snapshot & diff engine · lifecycle & event engine)
+- **Next milestone:** Milestone 6 — Production dashboard experience
 - **Runtime:** Node.js 24 LTS · pnpm · Turborepo · Next.js 16 App Router · TypeScript strict
+
+## Milestone 5 — Lifecycle & event engine ✅
+
+| Area                                    | Status | Notes                                                                                                                                                                                                                              |
+| --------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lifecycle reducer (`@bai/event-engine`) | ✅     | pure `reduceLifecycle` (04 §18): qualifying-miss rules, versioned thresholds (first_miss→suspected: ≥2 misses/≥24h/≥2 runs; →confirmed: ≥3 misses/≥7d/high-conf not_found), degraded-run suppression, reactivation reset, `lifecycle-state:v1` |
+| Run health                              | ✅     | `assessRunHealth`: valid-drop <70%, error-rate >15%, blocked-rate >5% → degraded (04 §7, 05 §5.2)                                                                                                                                  |
+| Events + dedupe                         | ✅     | material field-change events (price/rating/review-count/host/direct-channel) + lifecycle transition events; deterministic dedupe keys (04 §9); engine `EventType` mapped to `app.event_type` at the DB boundary                    |
+| Evidence                                | ✅     | every generated event writes an `event_evidence` row (snapshot/run/rule-version/explanation, 04 §15, EVT-01)                                                                                                                       |
+| Persistence (worker)                    | ✅     | import runner now emits `listing_created` on first sight, field-change events from diffs, and lifecycle transitions; updates the authoritative lifecycle projection + `lifecycle_state` jsonb (new migration)                       |
+| Engine tests                            | ✅     | 20 timeline/unit tests: LIFE-01…LIFE-10 + EVT-03…EVT-07 + run-health + idempotency                                                                                                                                                |
+| DB tests                                | ✅     | event dedupe-key idempotency, evidence linkage, lifecycle jsonb state, dataset-scoped RLS, dismissal-in-history (4 executed; 32 total)                                                                                             |
+
+**Acceptance (M5):** all `06_ACCEPTANCE_TESTS.md` Lifecycle scenarios (LIFE-01…LIFE-10) are covered by the pure reducer's timeline tests; Event scenarios EVT-01…EVT-07 by the event-derivation + persistence tests. Manual-review **columns** (`is_reviewed`/`reviewed_*`/`dismissed_*`) exist and a dismissed event stays in history (EVT-08); the review/dismiss **UI + audited RPC** lands with the dashboard/review surfaces (M6/M7), since events are append-only to `authenticated` and review mutation needs a SECURITY DEFINER action.
+
+**Not executable here:** the live worker running the reducer over an adapter timeline against Postgres. The reducer/events/run-health are pure and fully unit-tested; the event/evidence/lifecycle **write path** (dedupe idempotency, evidence linkage, jsonb state, RLS) is executed against the real migration in PGlite.
 
 ## Milestone 4 — Snapshot & diff engine ✅
 

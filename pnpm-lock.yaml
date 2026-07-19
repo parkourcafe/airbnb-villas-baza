@@ -102,6 +102,9 @@ importers:
       '@bai/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@bai/event-engine':
+        specifier: workspace:*
+        version: link:../../packages/event-engine
       '@bai/import-engine':
         specifier: workspace:*
         version: link:../../packages/import-engine
@@ -234,6 +237,9 @@ importers:
       '@bai/domain':
         specifier: workspace:*
         version: link:../domain
+      '@bai/snapshot-engine':
+        specifier: workspace:*
+        version: link:../snapshot-engine
     devDependencies:
       '@bai/config':
         specifier: workspace:*
