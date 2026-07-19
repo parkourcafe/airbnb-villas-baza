@@ -1,0 +1,34 @@
+{
+  "name": "@bai/test-fixtures",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Controlled demo-fixture datasets (clearly marked as demo) and helpers to load them for deterministic end-to-end scenarios.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./fixtures/*": "./fixtures/*"
+  },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "files": [
+    "src",
+    "fixtures"
+  ],
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf .turbo coverage *.tsbuildinfo"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@bai/config": "workspace:*",
+    "@types/node": "22.10.2",
+    "eslint": "9.17.0",
+    "typescript": "5.7.2",
+    "vitest": "2.1.8"
+  }
+}

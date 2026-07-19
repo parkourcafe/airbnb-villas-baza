@@ -1,0 +1,25 @@
+{
+  "source_key": "demo_fixture",
+  "rule_version": "demo-lifecycle-v1",
+  "coverage": {
+    "minimum_ratio_for_healthy_full_run": 0.7,
+    "maximum_source_error_ratio": 0.15,
+    "maximum_blocked_ratio": 0.05
+  },
+  "lifecycle": {
+    "suspected_inactive": {
+      "minimum_consecutive_qualifying_misses": 2,
+      "minimum_elapsed_hours": 24
+    },
+    "confirmed_inactive": {
+      "minimum_consecutive_qualifying_misses": 3,
+      "minimum_elapsed_days": 7,
+      "requires_high_confidence_direct_not_found": true
+    }
+  },
+  "materiality": {
+    "price_percent": 5,
+    "rating_absolute": 0.05,
+    "review_count_visible_increment": 5
+  }
+}

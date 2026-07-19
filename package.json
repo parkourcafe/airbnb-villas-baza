@@ -1,0 +1,37 @@
+{
+  "name": "bali-accommodation-intelligence",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Bali Accommodation Intelligence (BAI) - source-agnostic, history-first accommodation analytics.",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:db": "turbo run test:db",
+    "test:e2e": "turbo run test:e2e",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mjs,cjs,json,md,css}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,cjs,json,md,css}\"",
+    "supabase:status": "echo \"supabase is introduced in milestone 1; not configured yet\" && exit 0",
+    "db:types": "echo \"database types are generated in milestone 1; not configured yet\" && exit 0",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@bai/config": "workspace:*",
+    "prettier": "3.4.2",
+    "turbo": "2.3.3",
+    "typescript": "5.7.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp"
+    ]
+  }
+}

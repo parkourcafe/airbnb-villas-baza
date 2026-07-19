@@ -1,0 +1,75 @@
+/**
+ * BAI theme tokens - an Other Bali-inspired tropical palette.
+ *
+ * Plain CSS custom properties only (no Tailwind directives) so this file can be
+ * imported directly by the app alongside its own Tailwind stylesheet. Values are
+ * HSL channels consumed as `hsl(var(--token))` by the shared Tailwind preset.
+ */
+
+:root {
+  --background: 40 30% 98%;
+  --foreground: 200 20% 12%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 200 20% 12%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 200 20% 12%;
+
+  --primary: 174 62% 32%;
+  --primary-foreground: 160 40% 98%;
+
+  --secondary: 36 44% 92%;
+  --secondary-foreground: 200 25% 20%;
+
+  --muted: 40 20% 94%;
+  --muted-foreground: 200 12% 40%;
+
+  --accent: 172 45% 90%;
+  --accent-foreground: 174 62% 24%;
+
+  --destructive: 0 72% 45%;
+  --destructive-foreground: 0 0% 98%;
+
+  --warning: 33 92% 50%;
+  --warning-foreground: 30 40% 12%;
+
+  --border: 40 18% 86%;
+  --input: 40 18% 86%;
+  --ring: 174 62% 32%;
+
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 200 30% 8%;
+  --foreground: 160 20% 92%;
+
+  --card: 200 28% 11%;
+  --card-foreground: 160 20% 92%;
+
+  --popover: 200 28% 11%;
+  --popover-foreground: 160 20% 92%;
+
+  --primary: 172 55% 45%;
+  --primary-foreground: 200 30% 8%;
+
+  --secondary: 200 18% 18%;
+  --secondary-foreground: 160 20% 92%;
+
+  --muted: 200 16% 18%;
+  --muted-foreground: 190 12% 62%;
+
+  --accent: 200 20% 20%;
+  --accent-foreground: 172 55% 70%;
+
+  --destructive: 0 62% 45%;
+  --destructive-foreground: 0 0% 98%;
+
+  --warning: 33 90% 55%;
+  --warning-foreground: 30 40% 10%;
+
+  --border: 200 16% 22%;
+  --input: 200 16% 22%;
+  --ring: 172 55% 45%;
+}
