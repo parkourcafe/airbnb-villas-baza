@@ -9,6 +9,7 @@ import type {
   PropertyDetail,
   PropertySummary,
   Region,
+  SnapshotFieldDiff,
   SourceListingSummary,
 } from "@bai/domain";
 import type { Database } from "../generated/database.types";
@@ -224,9 +225,53 @@ export async function listListingSnapshots(
   }));
 }
 
+interface SnapshotDiffRow {
+  field_name: string;
+  change_kind: string;
+  previous_value: unknown;
+  current_value: unknown;
+  absolute_delta: number | null;
+  percent_delta: number | null;
+  is_material: boolean;
+  rule_version: string;
+}
+
+/**
+ * The stored field diffs for a snapshot (its comparison against the previous
+ * comparable snapshot). Material diffs first, then by field name for a stable
+ * order.
+ */
+export async function listSnapshotDiffs(
+  client: DbClient,
+  currentSnapshotId: string,
+): Promise<SnapshotFieldDiff[]> {
+  const { data, error } = await client
+    .from("snapshot_diffs")
+    .select(
+      "field_name, change_kind, previous_value, current_value, absolute_delta, percent_delta, is_material, rule_version",
+    )
+    .eq("current_snapshot_id", currentSnapshotId)
+    .order("is_material", { ascending: false })
+    .order("field_name", { ascending: true })
+    .returns<SnapshotDiffRow[]>();
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    fieldName: row.field_name,
+    changeKind: row.change_kind,
+    previousValue: row.previous_value,
+    currentValue: row.current_value,
+    absoluteDelta: row.absolute_delta,
+    percentDelta: row.percent_delta,
+    isMaterial: row.is_material,
+    ruleVersion: row.rule_version,
+  }));
+}
+
 export interface EventFilters {
   eventType?: string;
   propertyId?: string;
+  /** "pending" hides reviewed/dismissed; "dismissed" shows only dismissed. */
+  review?: "pending" | "reviewed" | "dismissed";
 }
 
 interface EventRow {
@@ -238,6 +283,8 @@ interface EventRow {
   confidence: Confidence | null;
   title: string;
   summary: string | null;
+  is_reviewed: boolean;
+  dismissed_at: string | null;
 }
 
 function mapEvent(row: EventRow): CatalogueEvent {
@@ -250,6 +297,8 @@ function mapEvent(row: EventRow): CatalogueEvent {
     confidence: row.confidence,
     title: row.title,
     summary: row.summary,
+    isReviewed: row.is_reviewed,
+    dismissedAt: row.dismissed_at,
   };
 }
 
@@ -264,7 +313,7 @@ export async function listEvents(
   let query = client
     .from("events")
     .select(
-      "id, property_id, source_listing_id, event_type, event_at, confidence, title, summary",
+      "id, property_id, source_listing_id, event_type, event_at, confidence, title, summary, is_reviewed, dismissed_at",
     )
     .eq("dataset_id", datasetId)
     .order("event_at", { ascending: false })
@@ -275,6 +324,13 @@ export async function listEvents(
     query = query.eq("event_type", filters.eventType as DbEventType);
   }
   if (filters.propertyId) query = query.eq("property_id", filters.propertyId);
+  if (filters.review === "pending") {
+    query = query.is("dismissed_at", null).eq("is_reviewed", false);
+  } else if (filters.review === "reviewed") {
+    query = query.eq("is_reviewed", true);
+  } else if (filters.review === "dismissed") {
+    query = query.not("dismissed_at", "is", null);
+  }
   if (after) {
     query = query.or(
       `event_at.lt.${after.sortValue},and(event_at.eq.${after.sortValue},id.lt.${after.id})`,

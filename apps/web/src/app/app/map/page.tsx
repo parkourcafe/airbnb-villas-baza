@@ -38,6 +38,7 @@ export default async function MapPage() {
       name: p.canonicalName,
       latitude: roundCoordinate(p.latitude as number),
       longitude: roundCoordinate(p.longitude as number),
+      lifecycleStatus: p.currentLifecycleStatus,
     }));
 
   const styleUrl = process.env.MAP_STYLE_URL || null;

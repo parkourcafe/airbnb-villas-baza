@@ -29,6 +29,9 @@ importers:
       '@bai/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@bai/reporting':
+        specifier: workspace:*
+        version: link:../../packages/reporting
       '@bai/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -99,9 +102,27 @@ importers:
       '@bai/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@bai/event-engine':
+        specifier: workspace:*
+        version: link:../../packages/event-engine
+      '@bai/import-engine':
+        specifier: workspace:*
+        version: link:../../packages/import-engine
+      '@bai/reporting':
+        specifier: workspace:*
+        version: link:../../packages/reporting
+      '@bai/snapshot-engine':
+        specifier: workspace:*
+        version: link:../../packages/snapshot-engine
       '@bai/source-sdk':
         specifier: workspace:*
         version: link:../../packages/source-sdk
+      '@supabase/supabase-js':
+        specifier: 2.110.7
+        version: 2.110.7
+      postgres:
+        specifier: 3.4.9
+        version: 3.4.9
       zod:
         specifier: 3.25.76
         version: 3.25.76
@@ -219,6 +240,9 @@ importers:
       '@bai/domain':
         specifier: workspace:*
         version: link:../domain
+      '@bai/snapshot-engine':
+        specifier: workspace:*
+        version: link:../snapshot-engine
     devDependencies:
       '@bai/config':
         specifier: workspace:*
@@ -241,10 +265,16 @@ importers:
       '@bai/domain':
         specifier: workspace:*
         version: link:../domain
+      csv-parse:
+        specifier: 7.0.1
+        version: 7.0.1
     devDependencies:
       '@bai/config':
         specifier: workspace:*
         version: link:../config
+      '@bai/test-fixtures':
+        specifier: workspace:*
+        version: link:../test-fixtures
       '@types/node':
         specifier: 22.20.1
         version: 22.20.1
@@ -303,6 +333,12 @@ importers:
       '@bai/domain':
         specifier: workspace:*
         version: link:../domain
+      '@bai/import-engine':
+        specifier: workspace:*
+        version: link:../import-engine
+      '@bai/snapshot-engine':
+        specifier: workspace:*
+        version: link:../snapshot-engine
     devDependencies:
       '@bai/config':
         specifier: workspace:*
@@ -2126,6 +2162,9 @@ packages:
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
 
+  csv-parse@7.0.1:
+    resolution: {integrity: sha512-+2z7Ar0APQ7Uu6fX4cn+pitRmxjZ1WPBcGmZFKmA74FCyi7Et/XZx8cjNQ5CjbZ4HCOxXCOpRBYvYH08Qa003A==}
+
   data-view-buffer@1.0.2:
     resolution: {integrity: sha512-EmKO5V3OLXh1rtK2wgXRansaK1/mtVdTUEiEI0W8RkvgT05kfxaH29PliLnpLP73yYO6142Q72QNa8Wx/A5CqQ==}
     engines: {node: '>= 0.4'}
@@ -2981,6 +3020,10 @@ packages:
   postcss@8.5.19:
     resolution: {integrity: sha512-Mz8SaolMd8nB+G13WkORcxQKHZ/NE4xXevtkJHVuG+guo9/wYKlIMTKAqGdEmYOXR2ijPjTYNHssizdaVSUNdQ==}
     engines: {node: ^10 || ^12 || >=14}
+
+  postgres@3.4.9:
+    resolution: {integrity: sha512-GD3qdB0x1z9xgFI6cdRD6xu2Sp2WCOEoe3mtnyB5Ee0XrrL5Pe+e4CCnJrRMnL1zYtRDZmQQVbvOttLnKDLnaw==}
+    engines: {node: '>=12'}
 
   potpack@2.1.0:
     resolution: {integrity: sha512-pcaShQc1Shq0y+E7GqJqvZj8DTthWV1KeHGdi0Z6IAin2Oi3JnLCOfwnCo84qc+HAp52wT9nK9H7FAJp5a44GQ==}
@@ -4981,6 +5024,8 @@ snapshots:
 
   csstype@3.2.3: {}
 
+  csv-parse@7.0.1: {}
+
   data-view-buffer@1.0.2:
     dependencies:
       call-bound: 1.0.4
@@ -6038,6 +6083,8 @@ snapshots:
       nanoid: 3.3.16
       picocolors: 1.1.1
       source-map-js: 1.2.1
+
+  postgres@3.4.9: {}
 
   potpack@2.1.0: {}
 

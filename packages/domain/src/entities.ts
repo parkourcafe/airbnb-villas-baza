@@ -118,6 +118,17 @@ export interface ListingSnapshotSummary {
   isSuperhost: boolean | null;
 }
 
+export interface SnapshotFieldDiff {
+  fieldName: string;
+  changeKind: string;
+  previousValue: unknown;
+  currentValue: unknown;
+  absoluteDelta: number | null;
+  percentDelta: number | null;
+  isMaterial: boolean;
+  ruleVersion: string;
+}
+
 export interface CatalogueEvent {
   id: string;
   propertyId: string;
@@ -127,6 +138,8 @@ export interface CatalogueEvent {
   confidence: Confidence | null;
   title: string;
   summary: string | null;
+  isReviewed: boolean;
+  dismissedAt: string | null;
 }
 
 export interface EventEvidenceItem {

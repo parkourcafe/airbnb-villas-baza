@@ -1,0 +1,28 @@
+# Fly.io config for the BAI worker (a long-running job poller — no inbound HTTP).
+#
+# First-time setup:
+#   fly launch --no-deploy --copy-config --name bai-worker
+#   fly secrets set SUPABASE_DB_URL=... SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=...
+#   fly deploy --config apps/worker/fly.toml --dockerfile apps/worker/Dockerfile
+#
+# The GitHub Actions deploy job runs the same `flyctl deploy` on merge to main.
+
+app = "bai-worker"
+primary_region = "sin" # Singapore — closest Fly region to Bali
+
+[build]
+dockerfile = "Dockerfile"
+
+# Single always-on worker process. No [[services]] block => no public port; Fly
+# keeps the machine running so the poll loop never stops.
+[processes]
+app = "node dist/index.js"
+
+[env]
+WORKER_ID = "fly-worker-1"
+WORKER_POLL_INTERVAL_MS = "5000"
+WORKER_CONCURRENCY = "2"
+
+[[vm]]
+size = "shared-cpu-1x"
+memory = "512mb"

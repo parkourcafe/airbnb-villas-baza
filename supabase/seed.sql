@@ -9,6 +9,20 @@
 -- provided for local convenience (`supabase db reset`); for other environments
 -- prefer the Supabase admin API / CLI to create users. Everything is idempotent.
 
+-- --- Production guard (B14) -------------------------------------------------
+-- Refuse to load demo data into a production database. Set the marker once per
+-- environment with:  alter database <db> set app.environment = 'production';
+-- In any other environment `current_setting(..., true)` is null and the seed
+-- proceeds. Running under psql with ON_ERROR_STOP aborts the whole seed here.
+do $$
+begin
+  if current_setting('app.environment', true) = 'production' then
+    raise exception
+      'refusing to load demo seed data: app.environment=production';
+  end if;
+end
+$$;
+
 -- --- Demo auth users -------------------------------------------------------
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password,

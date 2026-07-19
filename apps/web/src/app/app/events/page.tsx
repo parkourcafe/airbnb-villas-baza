@@ -12,11 +12,14 @@ import {
   TableHeader,
   TableRow,
 } from "@bai/ui";
+import { canMutateData } from "@bai/domain";
 import { loadTenancyContext } from "@/lib/tenancy";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { PageHeader, EmptyState } from "../_components/page-parts";
 import { EvidenceSheet } from "../_components/evidence-sheet";
+import { EventReview } from "./event-review";
+import { CreateLeadButton } from "./create-lead-button";
 
 export const metadata: Metadata = { title: "Events" };
 
@@ -33,7 +36,19 @@ function humanize(value: string): string {
   return value.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 }
 
-type SearchParams = Promise<{ type?: string; cursor?: string }>;
+type SearchParams = Promise<{
+  type?: string;
+  review?: string;
+  cursor?: string;
+}>;
+
+const REVIEW_OPTIONS = ["pending", "reviewed", "dismissed"] as const;
+
+function isReview(
+  value: string | undefined,
+): value is "pending" | "reviewed" | "dismissed" {
+  return value === "pending" || value === "reviewed" || value === "dismissed";
+}
 
 export default async function EventsPage({
   searchParams,
@@ -43,6 +58,9 @@ export default async function EventsPage({
   const params = await searchParams;
   const ctx = await loadTenancyContext();
   const dataset = ctx?.selectedDataset ?? null;
+  const canReview = ctx?.selectedOrganization
+    ? canMutateData(ctx.selectedOrganization.role)
+    : false;
 
   if (!dataset) {
     return (
@@ -57,8 +75,9 @@ export default async function EventsPage({
   }
 
   const supabase = await createSupabaseServerClient();
+  const review = isReview(params.review) ? params.review : undefined;
   const page = await listEvents(supabase, dataset.id, {
-    filters: { eventType: params.type || undefined },
+    filters: { eventType: params.type || undefined, review },
     page: { cursor: params.cursor },
   });
 
@@ -75,6 +94,7 @@ export default async function EventsPage({
 
   const baseQuery: Record<string, string> = {};
   if (params.type) baseQuery.type = params.type;
+  if (review) baseQuery.review = review;
 
   return (
     <div>
@@ -103,10 +123,25 @@ export default async function EventsPage({
             ))}
           </select>
         </label>
+        <label className="flex flex-col gap-1 text-sm">
+          <span className="font-medium">Review</span>
+          <select
+            name="review"
+            defaultValue={review ?? ""}
+            className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+          >
+            <option value="">All</option>
+            {REVIEW_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {humanize(option)}
+              </option>
+            ))}
+          </select>
+        </label>
         <Button type="submit" size="sm" variant="outline">
           Apply
         </Button>
-        {params.type ? (
+        {params.type || review ? (
           <Button asChild size="sm" variant="ghost">
             <Link href="/app/events">Clear</Link>
           </Button>
@@ -127,6 +162,7 @@ export default async function EventsPage({
                   <TableHead>Event</TableHead>
                   <TableHead>When</TableHead>
                   <TableHead>Confidence</TableHead>
+                  <TableHead className="text-right">Review</TableHead>
                   <TableHead className="text-right">Evidence</TableHead>
                 </TableRow>
               </TableHeader>
@@ -153,6 +189,23 @@ export default async function EventsPage({
                       ) : (
                         "—"
                       )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex flex-col items-end gap-1">
+                        <EventReview
+                          eventId={event.id}
+                          isReviewed={event.isReviewed}
+                          isDismissed={event.dismissedAt !== null}
+                          canReview={canReview}
+                        />
+                        {canReview ? (
+                          <CreateLeadButton
+                            eventId={event.id}
+                            propertyId={event.propertyId}
+                            sourceListingId={event.sourceListingId}
+                          />
+                        ) : null}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <EvidenceSheet

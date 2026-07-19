@@ -19,10 +19,12 @@
     "clean": "rm -rf .turbo coverage *.tsbuildinfo"
   },
   "dependencies": {
-    "@bai/domain": "workspace:*"
+    "@bai/domain": "workspace:*",
+    "csv-parse": "7.0.1"
   },
   "devDependencies": {
     "@bai/config": "workspace:*",
+    "@bai/test-fixtures": "workspace:*",
     "@types/node": "22.20.1",
     "eslint": "9.39.5",
     "typescript": "5.9.3",

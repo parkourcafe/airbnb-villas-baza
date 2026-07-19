@@ -295,11 +295,20 @@ export interface Database {
           rule_version: string | null;
           deduplication_key: string | null;
           is_reviewed: boolean;
+          reviewed_by: string | null;
+          reviewed_at: string | null;
           dismissed_at: string | null;
+          dismissal_reason: string | null;
           created_at: string;
         };
         Insert: Record<string, never>;
-        Update: Record<string, never>;
+        Update: {
+          is_reviewed?: boolean;
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          dismissed_at?: string | null;
+          dismissal_reason?: string | null;
+        };
         Relationships: [];
       };
       event_evidence: {
@@ -331,13 +340,361 @@ export interface Database {
           metadata: Json;
           created_at: string;
         };
+        Insert: {
+          organization_id?: string | null;
+          actor_user_id?: string | null;
+          actor_type?: string;
+          action: string;
+          target_type?: string | null;
+          target_id?: string | null;
+          metadata?: Json;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      imports: {
+        Row: {
+          id: string;
+          organization_id: string;
+          dataset_id: string;
+          source_id: string;
+          status: Database["public"]["Enums"]["import_status"];
+          input_object_path: string | null;
+          original_filename: string | null;
+          file_checksum: string | null;
+          column_mapping: Json;
+          requested_by: string | null;
+          collection_run_id: string | null;
+          total_rows: number;
+          accepted_rows: number;
+          rejected_rows: number;
+          duplicate_rows: number;
+          warning_count: number;
+          error_summary: string | null;
+          created_at: string;
+          started_at: string | null;
+          finished_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          dataset_id: string;
+          source_id: string;
+          status?: Database["public"]["Enums"]["import_status"];
+          input_object_path?: string | null;
+          original_filename?: string | null;
+          file_checksum?: string | null;
+          column_mapping?: Json;
+          requested_by?: string | null;
+        };
+        Update: {
+          status?: Database["public"]["Enums"]["import_status"];
+          collection_run_id?: string | null;
+          total_rows?: number;
+          accepted_rows?: number;
+          rejected_rows?: number;
+          duplicate_rows?: number;
+          warning_count?: number;
+          error_summary?: string | null;
+          started_at?: string | null;
+          finished_at?: string | null;
+        };
+        Relationships: [];
+      };
+      import_rejections: {
+        Row: {
+          id: number;
+          import_id: string;
+          row_number: number;
+          error_code: string;
+          error_message: string | null;
+          raw_row: Json | null;
+          created_at: string;
+        };
         Insert: Record<string, never>;
         Update: Record<string, never>;
         Relationships: [];
       };
+      watchlists: {
+        Row: {
+          id: string;
+          organization_id: string;
+          dataset_id: string;
+          name: string;
+          description: string | null;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          dataset_id: string;
+          name: string;
+          description?: string | null;
+        };
+        Update: {
+          name?: string;
+          description?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      watchlist_items: {
+        Row: {
+          id: string;
+          watchlist_id: string;
+          item_type: string;
+          property_id: string | null;
+          source_listing_id: string | null;
+          region_id: string | null;
+          saved_filter: Json | null;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          watchlist_id: string;
+          item_type: string;
+          property_id?: string | null;
+          source_listing_id?: string | null;
+          region_id?: string | null;
+          saved_filter?: Json | null;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      leads: {
+        Row: {
+          id: string;
+          organization_id: string;
+          dataset_id: string;
+          property_id: string;
+          source_listing_id: string | null;
+          event_id: string | null;
+          stage: Database["public"]["Enums"]["lead_stage"];
+          priority: number;
+          reason_code: string | null;
+          reason_text: string | null;
+          contact_name: string | null;
+          contact_role: string | null;
+          business_email: string | null;
+          business_whatsapp: string | null;
+          website: string | null;
+          instagram: string | null;
+          contact_source_url: string | null;
+          contact_data_basis: string | null;
+          assigned_to: string | null;
+          last_activity_at: string | null;
+          next_action_at: string | null;
+          do_not_contact: boolean;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          dataset_id: string;
+          property_id: string;
+          source_listing_id?: string | null;
+          event_id?: string | null;
+          stage?: Database["public"]["Enums"]["lead_stage"];
+          priority?: number;
+          reason_code?: string | null;
+          reason_text?: string | null;
+          do_not_contact?: boolean;
+        };
+        Update: {
+          stage?: Database["public"]["Enums"]["lead_stage"];
+          priority?: number;
+          reason_text?: string | null;
+          contact_name?: string | null;
+          contact_role?: string | null;
+          business_email?: string | null;
+          business_whatsapp?: string | null;
+          website?: string | null;
+          instagram?: string | null;
+          contact_source_url?: string | null;
+          contact_data_basis?: string | null;
+          assigned_to?: string | null;
+          last_activity_at?: string | null;
+          next_action_at?: string | null;
+          do_not_contact?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      lead_activities: {
+        Row: {
+          id: string;
+          lead_id: string;
+          activity_type: string;
+          body: string | null;
+          previous_stage: Database["public"]["Enums"]["lead_stage"] | null;
+          new_stage: Database["public"]["Enums"]["lead_stage"] | null;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          lead_id: string;
+          activity_type: string;
+          body?: string | null;
+          previous_stage?: Database["public"]["Enums"]["lead_stage"] | null;
+          new_stage?: Database["public"]["Enums"]["lead_stage"] | null;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      property_notes: {
+        Row: {
+          id: string;
+          organization_id: string;
+          property_id: string;
+          body: string;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          property_id: string;
+          body: string;
+        };
+        Update: {
+          body?: string;
+          deleted_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      reports: {
+        Row: {
+          id: string;
+          organization_id: string;
+          dataset_id: string;
+          report_type: string;
+          name: string;
+          parameters: Json;
+          status: Database["public"]["Enums"]["report_status"];
+          output_object_path: string | null;
+          row_count: number | null;
+          requested_by: string;
+          created_at: string;
+          ready_at: string | null;
+          expires_at: string | null;
+          error_summary: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          dataset_id: string;
+          report_type: string;
+          name: string;
+          parameters?: Json;
+        };
+        Update: {
+          status?: Database["public"]["Enums"]["report_status"];
+          output_object_path?: string | null;
+          row_count?: number | null;
+          ready_at?: string | null;
+          expires_at?: string | null;
+          error_summary?: string | null;
+        };
+        Relationships: [];
+      };
+      property_redirects: {
+        Row: {
+          id: string;
+          dataset_id: string;
+          from_property_id: string;
+          to_property_id: string;
+          reason: string | null;
+          kind: string;
+          moved_source_listing_ids: string[];
+          created_by: string;
+          created_at: string;
+        };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      collection_schedules: {
+        Row: {
+          id: string;
+          dataset_id: string;
+          source_id: string;
+          cadence_minutes: number;
+          enabled: boolean;
+          last_enqueued_at: string | null;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          dataset_id: string;
+          source_id: string;
+          cadence_minutes?: number;
+          enabled?: boolean;
+        };
+        Update: {
+          cadence_minutes?: number;
+          enabled?: boolean;
+          last_enqueued_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
-    Views: Record<never, never>;
-    Functions: Record<never, never>;
+    Views: {
+      import_sources: {
+        Row: {
+          id: string;
+          key: string;
+          display_name: string;
+          access_mode: string;
+        };
+        Relationships: [];
+      };
+      source_catalog: {
+        Row: {
+          id: string;
+          key: string;
+          display_name: string;
+          access_mode: string;
+          compliance_status: string;
+          automation_allowed: boolean;
+          capabilities: string[];
+          terms_reviewed_at: string | null;
+          review_expires_at: string | null;
+          restriction_reason: string | null;
+          rate_limit_policy: Json | null;
+        };
+        Relationships: [];
+      };
+    };
+    Functions: {
+      merge_properties: {
+        Args: { p_from: string; p_to: string; p_reason?: string | null };
+        Returns: undefined;
+      };
+      split_listing: {
+        Args: { p_source_listing: string; p_reason?: string | null };
+        Returns: string;
+      };
+      rollback_merge: {
+        Args: { p_redirect: string; p_reason?: string | null };
+        Returns: undefined;
+      };
+      enqueue_due_collections: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+    };
     Enums: {
       member_role: "owner" | "admin" | "analyst" | "viewer";
       dataset_status: "active" | "paused" | "archived";
@@ -358,6 +715,15 @@ export interface Database {
         | "reactivated"
         | "archived";
       confidence_level: "low" | "medium" | "high";
+      import_status:
+        | "uploaded"
+        | "validating"
+        | "ready"
+        | "processing"
+        | "completed"
+        | "completed_with_errors"
+        | "failed"
+        | "cancelled";
       event_type:
         | "listing_created"
         | "listing_first_miss"
@@ -382,6 +748,16 @@ export interface Database {
         | "manual_correction"
         | "property_merged"
         | "property_split";
+      lead_stage:
+        | "new"
+        | "qualified"
+        | "contacted"
+        | "in_progress"
+        | "won"
+        | "lost"
+        | "archived";
+      report_status:
+        "pending" | "queued" | "running" | "ready" | "failed" | "expired";
     };
     CompositeTypes: Record<never, never>;
   };
