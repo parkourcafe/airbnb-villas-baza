@@ -415,6 +415,197 @@ export interface Database {
         Update: Record<string, never>;
         Relationships: [];
       };
+      watchlists: {
+        Row: {
+          id: string;
+          organization_id: string;
+          dataset_id: string;
+          name: string;
+          description: string | null;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          dataset_id: string;
+          name: string;
+          description?: string | null;
+        };
+        Update: {
+          name?: string;
+          description?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      watchlist_items: {
+        Row: {
+          id: string;
+          watchlist_id: string;
+          item_type: string;
+          property_id: string | null;
+          source_listing_id: string | null;
+          region_id: string | null;
+          saved_filter: Json | null;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          watchlist_id: string;
+          item_type: string;
+          property_id?: string | null;
+          source_listing_id?: string | null;
+          region_id?: string | null;
+          saved_filter?: Json | null;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      leads: {
+        Row: {
+          id: string;
+          organization_id: string;
+          dataset_id: string;
+          property_id: string;
+          source_listing_id: string | null;
+          event_id: string | null;
+          stage: Database["public"]["Enums"]["lead_stage"];
+          priority: number;
+          reason_code: string | null;
+          reason_text: string | null;
+          contact_name: string | null;
+          contact_role: string | null;
+          business_email: string | null;
+          business_whatsapp: string | null;
+          website: string | null;
+          instagram: string | null;
+          contact_source_url: string | null;
+          contact_data_basis: string | null;
+          assigned_to: string | null;
+          last_activity_at: string | null;
+          next_action_at: string | null;
+          do_not_contact: boolean;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          dataset_id: string;
+          property_id: string;
+          source_listing_id?: string | null;
+          event_id?: string | null;
+          stage?: Database["public"]["Enums"]["lead_stage"];
+          priority?: number;
+          reason_code?: string | null;
+          reason_text?: string | null;
+          do_not_contact?: boolean;
+        };
+        Update: {
+          stage?: Database["public"]["Enums"]["lead_stage"];
+          priority?: number;
+          reason_text?: string | null;
+          contact_name?: string | null;
+          contact_role?: string | null;
+          business_email?: string | null;
+          business_whatsapp?: string | null;
+          website?: string | null;
+          instagram?: string | null;
+          contact_source_url?: string | null;
+          contact_data_basis?: string | null;
+          assigned_to?: string | null;
+          last_activity_at?: string | null;
+          next_action_at?: string | null;
+          do_not_contact?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      lead_activities: {
+        Row: {
+          id: string;
+          lead_id: string;
+          activity_type: string;
+          body: string | null;
+          previous_stage: Database["public"]["Enums"]["lead_stage"] | null;
+          new_stage: Database["public"]["Enums"]["lead_stage"] | null;
+          created_by: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          lead_id: string;
+          activity_type: string;
+          body?: string | null;
+          previous_stage?: Database["public"]["Enums"]["lead_stage"] | null;
+          new_stage?: Database["public"]["Enums"]["lead_stage"] | null;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+      property_notes: {
+        Row: {
+          id: string;
+          organization_id: string;
+          property_id: string;
+          body: string;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          property_id: string;
+          body: string;
+        };
+        Update: {
+          body?: string;
+          deleted_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      reports: {
+        Row: {
+          id: string;
+          organization_id: string;
+          dataset_id: string;
+          report_type: string;
+          name: string;
+          parameters: Json;
+          status: Database["public"]["Enums"]["report_status"];
+          output_object_path: string | null;
+          row_count: number | null;
+          requested_by: string;
+          created_at: string;
+          ready_at: string | null;
+          expires_at: string | null;
+          error_summary: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          dataset_id: string;
+          report_type: string;
+          name: string;
+          parameters?: Json;
+        };
+        Update: {
+          status?: Database["public"]["Enums"]["report_status"];
+          output_object_path?: string | null;
+          row_count?: number | null;
+          ready_at?: string | null;
+          expires_at?: string | null;
+          error_summary?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       import_sources: {
@@ -481,6 +672,21 @@ export interface Database {
         | "manual_correction"
         | "property_merged"
         | "property_split";
+      lead_stage:
+        | "new"
+        | "qualified"
+        | "contacted"
+        | "in_progress"
+        | "won"
+        | "lost"
+        | "archived";
+      report_status:
+        | "pending"
+        | "queued"
+        | "running"
+        | "ready"
+        | "failed"
+        | "expired";
     };
     CompositeTypes: Record<never, never>;
   };

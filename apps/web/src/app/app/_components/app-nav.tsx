@@ -11,6 +11,7 @@ const NAV = [
   { href: "/app/events", label: "Events" },
   { href: "/app/imports", label: "Imports" },
   { href: "/app/watchlists", label: "Watchlists" },
+  { href: "/app/leads", label: "Leads" },
   { href: "/app/reports", label: "Reports" },
   { href: "/app/settings/organization", label: "Organization" },
   { href: "/app/settings/team", label: "Team" },

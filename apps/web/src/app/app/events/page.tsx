@@ -19,6 +19,7 @@ import { formatDate } from "@/lib/format";
 import { PageHeader, EmptyState } from "../_components/page-parts";
 import { EvidenceSheet } from "../_components/evidence-sheet";
 import { EventReview } from "./event-review";
+import { CreateLeadButton } from "./create-lead-button";
 
 export const metadata: Metadata = { title: "Events" };
 
@@ -192,12 +193,21 @@ export default async function EventsPage({
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <EventReview
-                        eventId={event.id}
-                        isReviewed={event.isReviewed}
-                        isDismissed={event.dismissedAt !== null}
-                        canReview={canReview}
-                      />
+                      <div className="flex flex-col items-end gap-1">
+                        <EventReview
+                          eventId={event.id}
+                          isReviewed={event.isReviewed}
+                          isDismissed={event.dismissedAt !== null}
+                          canReview={canReview}
+                        />
+                        {canReview ? (
+                          <CreateLeadButton
+                            eventId={event.id}
+                            propertyId={event.propertyId}
+                            sourceListingId={event.sourceListingId}
+                          />
+                        ) : null}
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <EvidenceSheet

@@ -5,9 +5,25 @@ This document tracks milestone progress for Bali Accommodation Intelligence
 
 ## Current state
 
-- **Completed:** Milestones 0–6 (foundation · auth/tenancy · core catalogue · CSV import · snapshot & diff engine · lifecycle & event engine · dashboard review)
-- **Next milestone:** Milestone 7 — Watchlists, leads and reports
+- **Completed:** Milestones 0–7 (… dashboard review · watchlists/leads/reports)
+- **Next milestone:** Milestone 8 — Source Adapter SDK and worker scheduling
 - **Runtime:** Node.js 24 LTS · pnpm · Turborepo · Next.js 16 App Router · TypeScript strict
+
+## Milestone 7 — Watchlists, leads and reports ✅
+
+| Area                 | Status | Notes                                                                                                                                                                        |
+| -------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Schema + RLS         | ✅     | `watchlists`, `watchlist_items` (exactly-one-target check), `leads`, `lead_activities`, `property_notes`, `reports` — **organization-private** RLS, analyst+ mutations, viewer read-only |
+| Watchlists (7.1)     | ✅     | list + create (org-private); item count; add-property target via `watchlist_items`                                                                                          |
+| Leads (7.2)          | ✅     | convert event→lead preserving `event_id` evidence link; stages; `do_not_contact`; **no send/outreach**; idempotent per org+property                                        |
+| Reports (7.3)        | ✅     | report definitions with **immutable parameters** (DB trigger freezes `parameters`); status lifecycle; watchlist-scoped params validated                                     |
+| Repositories + types | ✅     | `listWatchlists`/`createWatchlist`/`listLeads`/`createLead`/`listReports`/`createReport`; `lead_stage`/`report_status` enums + table types                                  |
+| UI                   | ✅     | Watchlists, Leads (new nav), Reports pages with role-gated create forms; "Create lead" on the Events page                                                                    |
+| DB tests             | ✅     | cross-org isolation (watchlists/leads/reports invisible to another org), viewer-blocked insert, lead→evidence link, report-parameter immutability, item-target check (6; 39 total) |
+
+**Acceptance (M7):** analyst converts a high-confidence event to a lead ✓ · lead retains the evidence link ✓ · a watchlist report definition generates ✓ · an organization cannot access another organization's leads/reports ✓ (executed in PGlite).
+
+**Scope note:** report **async generation + signed CSV download** and large-export (>10k) jobs are a worker pipeline staged with M8 (scheduling); the report *definition* with immutable, reproducible parameters is complete. `notification_rules`/`exports` tables are deferred (email delivery is post-MVP per spec).
 
 ## Milestone 6 — Production dashboard experience ✅
 

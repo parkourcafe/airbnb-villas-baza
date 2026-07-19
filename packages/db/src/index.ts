@@ -14,4 +14,5 @@ export * from "./repositories/tenancy";
 export * from "./repositories/catalogue";
 export * from "./repositories/imports";
 export * from "./repositories/events";
+export * from "./repositories/leads";
 export type { Database, Json } from "./generated/database.types";

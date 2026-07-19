@@ -1,9 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getServiceClient, reviewEvent, type EventReviewAction } from "@bai/db";
+import {
+  createLead,
+  getServiceClient,
+  reviewEvent,
+  type EventReviewAction,
+} from "@bai/db";
 import { canMutateData } from "@bai/domain";
 import { loadTenancyContext } from "@/lib/tenancy";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export interface ReviewEventState {
   ok?: boolean;
@@ -53,4 +59,52 @@ export async function reviewEventAction(
 
   revalidatePath("/app/events");
   return { ok: true };
+}
+
+export interface CreateLeadState {
+  ok?: boolean;
+  error?: string;
+  created?: boolean;
+}
+
+/**
+ * Convert an event to a lead, preserving the evidence link (event_id). Leads are
+ * organization-private and capture intent only — there is no outreach/send. The
+ * insert is idempotent per organization+property.
+ */
+export async function createLeadFromEventAction(
+  _prev: CreateLeadState,
+  formData: FormData,
+): Promise<CreateLeadState> {
+  const propertyId = String(formData.get("propertyId") ?? "");
+  const eventId = String(formData.get("eventId") ?? "") || undefined;
+  const sourceListingId = String(formData.get("sourceListingId") ?? "") || undefined;
+  if (!propertyId) return { error: "Missing property." };
+
+  const ctx = await loadTenancyContext();
+  const org = ctx?.selectedOrganization ?? null;
+  const dataset = ctx?.selectedDataset ?? null;
+  if (!ctx || !org || !dataset) {
+    return { error: "No organization or dataset selected." };
+  }
+  if (!canMutateData(org.role)) {
+    return { error: "Your role cannot create leads." };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  try {
+    const { created } = await createLead(supabase, {
+      organizationId: org.id,
+      datasetId: dataset.id,
+      propertyId,
+      sourceListingId,
+      eventId,
+      reasonCode: "event_conversion",
+      reasonText: "Converted from an observed event.",
+    });
+    revalidatePath("/app/leads");
+    return { ok: true, created };
+  } catch {
+    return { error: "Could not create the lead." };
+  }
 }
