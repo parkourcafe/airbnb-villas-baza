@@ -168,6 +168,31 @@ with an elapsed schedule are enqueued. A missing/wrong secret returns 401.
 
 ---
 
-Once you pick hosts (e.g. Vercel for `apps/web`, a container/Fly/Railway for
-`apps/worker`), `.github/workflows/deploy.yml` is ready to fill in — tell me the
-stack and I'll wire the deploy steps + required secrets.
+## Deploy (web = Vercel, worker = Fly.io)
+
+The deploy pipeline is wired in `.github/workflows/deploy.yml` and runs on merge
+to `main`: apply migrations → advisors + audit → deploy web (Vercel) → deploy
+worker (Fly). Each deploy step is gated on its secret, so it no-ops until
+configured.
+
+**Web (Vercel).** Either connect the repo to Vercel's Git integration (simplest —
+Vercel auto-deploys `apps/web` on push, and you can skip the `deploy-web` job), or
+set `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` as repo secrets to let the
+workflow deploy it. Configure a **Vercel Cron** to `POST /api/cron` with the
+`Authorization: Bearer <CRON_SECRET>` header.
+
+**Worker (Fly.io).** `apps/worker/Dockerfile` + `apps/worker/fly.toml` are ready
+(the image bundles the workspace via tsup and ships prod deps via `pnpm deploy`).
+
+```bash
+fly launch --no-deploy --copy-config --name bai-worker
+fly secrets set SUPABASE_DB_URL=... SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=...
+fly deploy --config apps/worker/fly.toml --dockerfile apps/worker/Dockerfile
+```
+
+Add `FLY_API_TOKEN` as a repo secret and the workflow re-deploys the worker on
+every merge to `main`.
+
+Required repo secrets, in one place: Supabase — `SUPABASE_ACCESS_TOKEN`,
+`SUPABASE_PROJECT_REF`, `SUPABASE_DB_PASSWORD`; Vercel — `VERCEL_TOKEN`,
+`VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`; Fly — `FLY_API_TOKEN`.

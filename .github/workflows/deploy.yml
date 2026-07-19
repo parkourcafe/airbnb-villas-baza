@@ -1,17 +1,15 @@
-# Deploy pipeline (A8) — SKELETON.
+# Deploy pipeline (A8) — web on Vercel, worker on Fly.io.
 #
-# Runs on merge to main. Applies migrations to the linked Supabase project, runs
-# database advisors + a dependency audit, then deploys the web app and the
-# worker. The deploy steps are placeholders: fill in the host you choose (e.g.
-# Vercel for web, a container/Fly/Railway for the worker) and add the matching
-# secrets. Every step is gated so the workflow is a safe no-op until the secrets
-# are configured.
+# On merge to main: apply migrations to the linked Supabase project, run
+# advisors + a dependency audit, then deploy the web app (Vercel) and the worker
+# (Fly). Every deploy step is gated on its secret, so the workflow is a safe
+# no-op until you configure them.
 #
 # Required repository secrets:
-#   SUPABASE_ACCESS_TOKEN   - Supabase CLI access token
-#   SUPABASE_PROJECT_REF    - target project ref
-#   SUPABASE_DB_PASSWORD    - database password (for `supabase db push`)
-#   (plus whatever your web/worker hosts require)
+#   Supabase: SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_REF, SUPABASE_DB_PASSWORD
+#   Vercel:   VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
+#             (or skip this job and use Vercel's own Git integration)
+#   Fly:      FLY_API_TOKEN   (fly.io deploy token)
 
 name: Deploy
 
@@ -73,18 +71,37 @@ jobs:
         if: env.SUPABASE_CONFIGURED != 'true'
         run: echo "SUPABASE_ACCESS_TOKEN not set — skipping migrate/advisors."
 
+  # Web on Vercel. Skip this job entirely if you connect the repo to Vercel's Git
+  # integration instead (Vercel then auto-deploys on push).
   deploy-web:
     needs: migrate
     runs-on: ubuntu-latest
+    if: ${{ secrets.VERCEL_TOKEN != '' }}
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
-      # TODO: replace with your web host's deploy action (e.g. Vercel).
-      - name: Deploy web (placeholder)
-        run: echo "Configure web deploy for apps/web here."
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+      - name: Deploy apps/web to production
+        run: |
+          vercel pull --yes --environment=production --token="${{ secrets.VERCEL_TOKEN }}"
+          vercel build --prod --token="${{ secrets.VERCEL_TOKEN }}"
+          vercel deploy --prebuilt --prod --token="${{ secrets.VERCEL_TOKEN }}"
 
+  # Worker on Fly.io (apps/worker/Dockerfile + fly.toml).
   deploy-worker:
     needs: migrate
     runs-on: ubuntu-latest
+    if: ${{ secrets.FLY_API_TOKEN != '' }}
     steps:
-      # TODO: replace with your worker host's deploy (container image / Fly / Railway).
-      - name: Deploy worker (placeholder)
-        run: echo "Configure worker deploy for apps/worker here."
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy worker
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: flyctl deploy --config apps/worker/fly.toml --dockerfile apps/worker/Dockerfile --remote-only
