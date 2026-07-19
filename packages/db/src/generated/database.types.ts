@@ -618,7 +618,12 @@ export interface Database {
         Relationships: [];
       };
     };
-    Functions: Record<never, never>;
+    Functions: {
+      merge_properties: {
+        Args: { p_from: string; p_to: string; p_reason?: string | null };
+        Returns: undefined;
+      };
+    };
     Enums: {
       member_role: "owner" | "admin" | "analyst" | "viewer";
       dataset_status: "active" | "paused" | "archived";

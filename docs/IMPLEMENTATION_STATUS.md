@@ -5,9 +5,25 @@ This document tracks milestone progress for Bali Accommodation Intelligence
 
 ## Current state
 
-- **Completed:** Milestones 0–8 (… watchlists/leads/reports · source SDK & scheduling)
-- **Next milestone:** Milestone 9 — Manual entity resolution
+- **Completed:** Milestones 0–9 (… source SDK & scheduling · manual entity resolution)
+- **Next milestone:** Milestone 10 — Security, performance and launch hardening
 - **Runtime:** Node.js 24 LTS · pnpm · Turborepo · Next.js 16 App Router · TypeScript strict
+
+## Milestone 9 — Manual entity resolution ✅
+
+| Area                 | Status | Notes                                                                                                                                                              |
+| -------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Merge RPC            | ✅     | `public.merge_properties(from,to,reason)` reassigns source listings/events/aliases/notes, records a `property_redirects` row, archives the duplicate, recomputes the canonical window, and audits |
+| Preservation         | ✅     | snapshots and source listings are never deleted — they follow their listing to the canonical property, so all history stays reachable                             |
+| Permissions          | ✅     | admin-gated: the RPC validates `private.user_can_administer_dataset(auth.uid(), …)`; a non-admin call raises; UI control shown only to owner/admin                 |
+| SECURITY DEFINER     | ✅     | hardening checklist applied: fixed empty `search_path`, explicit `auth.uid()` admin check, execute revoked from public/anon and granted only to `authenticated`   |
+| Redirect record      | ✅     | `property_redirects` (dataset-scoped SELECT) preserves the from→to mapping for lookups and rollback                                                               |
+| UI                   | ✅     | admin-only "Resolve duplicate" control on the property detail page with candidate list + reason                                                                    |
+| DB tests             | ✅     | non-admin blocked, merge preserves snapshots/listings, events reachable, duplicate archived, redirect + audit written, self-merge rejected (3; 45 total)          |
+
+**Acceptance (M9):** snapshots never deleted ✓ · all source listings preserved ✓ · events/history reachable via the canonical property ✓ · action audited ✓ · non-admin cannot merge ✓ (executed in PGlite).
+
+**Scope note:** property **split** and one-click **rollback** reuse the same redirect record and a symmetric RPC and are staged as a follow-up; candidate-suggestion ranking (name/coordinate proximity) is a UI enhancement on top of the working merge. The redirect table is the groundwork for both.
 
 ## Milestone 8 — Source Adapter SDK and worker scheduling ✅
 
