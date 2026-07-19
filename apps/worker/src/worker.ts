@@ -1,19 +1,29 @@
-import { loadWorkerConfig, type WorkerConfig } from "./config";
+import type { Sql } from "postgres";
+import { canProcessJobs, loadWorkerConfig, type WorkerConfig } from "./config";
 import { logger } from "./observability/logger";
+import { closeSql, getSql } from "./db";
+import {
+  claimJob,
+  completeJob,
+  recoverStaleJobs,
+  type CollectionJob,
+} from "./jobs/queue";
+import { runImportJob } from "./jobs/import-runner";
+import { createCsvLoader } from "./storage";
 
 export interface RunWorkerOptions {
-  /** Smoke mode runs a single no-op cycle and exits cleanly. */
   smoke?: boolean;
-  /** Injectable config for tests; defaults to environment-derived config. */
   config?: WorkerConfig;
 }
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 /**
- * Run the worker. In smoke mode it validates configuration, emits a structured
- * log line and returns exit code 0 - this is the milestone-0 acceptance path.
- *
- * In normal mode it starts a poll loop with graceful shutdown handlers. There is
- * no job queue until milestone 1+, so each cycle is currently a no-op heartbeat.
+ * Run the worker. Smoke mode validates config, logs and returns 0 (the
+ * milestone-0 acceptance path). Normal mode polls the job queue and dispatches
+ * claimed jobs; without a database URL it degrades to a heartbeat.
  */
 export async function runWorker(
   options: RunWorkerOptions = {},
@@ -22,6 +32,7 @@ export async function runWorker(
   logger.info("worker.start", {
     workerId: config.workerId,
     concurrency: config.concurrency,
+    processesJobs: canProcessJobs(config),
     smoke: Boolean(options.smoke),
   });
 
@@ -35,22 +46,73 @@ export async function runWorker(
   return 0;
 }
 
+async function handleJob(
+  sql: Sql,
+  loadCsv: ((path: string) => Promise<string>) | undefined,
+  job: CollectionJob,
+): Promise<void> {
+  logger.info("job.claimed", { jobId: job.id, type: job.job_type });
+  try {
+    if (job.job_type === "import") {
+      if (!loadCsv) {
+        throw new Error("import job requires storage configuration");
+      }
+      await runImportJob({ sql, loadCsv }, job);
+    } else {
+      logger.warn("job.unsupported", { jobId: job.id, type: job.job_type });
+    }
+    await completeJob(sql, job.id, "succeeded");
+  } catch (error) {
+    logger.error("job.failed", { jobId: job.id, message: errorMessage(error) });
+    await completeJob(sql, job.id, "failed", errorMessage(error));
+  }
+}
+
 function runPollLoop(config: WorkerConfig): Promise<void> {
   return new Promise((resolve) => {
     let stopping = false;
+    let ticking = false;
+    const sql: Sql | undefined = canProcessJobs(config)
+      ? getSql(config.databaseUrl as string)
+      : undefined;
+    const loadCsv =
+      config.supabaseUrl && config.serviceRoleKey
+        ? createCsvLoader(config.supabaseUrl, config.serviceRoleKey)
+        : undefined;
+
+    const tick = async () => {
+      if (stopping || ticking) return;
+      ticking = true;
+      try {
+        if (!sql) {
+          logger.info("worker.heartbeat", { workerId: config.workerId });
+          return;
+        }
+        await recoverStaleJobs(sql);
+        const job = await claimJob(sql, config.workerId);
+        if (job) {
+          await handleJob(sql, loadCsv, job);
+        }
+      } catch (error) {
+        logger.error("worker.tick.error", { message: errorMessage(error) });
+      } finally {
+        ticking = false;
+      }
+    };
 
     const timer = setInterval(() => {
-      if (stopping) return;
-      // No queue is wired up before milestone 1; emit a heartbeat only.
-      logger.info("worker.heartbeat", { workerId: config.workerId });
+      void tick();
     }, config.pollIntervalMs);
 
     const shutdown = (signal: string) => {
       if (stopping) return;
       stopping = true;
       clearInterval(timer);
-      logger.info("worker.shutdown", { workerId: config.workerId, signal });
-      resolve();
+      void (async () => {
+        if (sql) await closeSql();
+        logger.info("worker.shutdown", { workerId: config.workerId, signal });
+        resolve();
+      })();
     };
 
     process.once("SIGINT", () => shutdown("SIGINT"));

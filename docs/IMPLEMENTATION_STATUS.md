@@ -5,9 +5,21 @@ This document tracks milestone progress for Bali Accommodation Intelligence
 
 ## Current state
 
-- **Completed:** Milestone 0 (foundation) · Milestone 1 (Supabase schema, auth, tenancy) · Milestone 2 (core data schema + fixture catalogue)
-- **Next milestone:** Milestone 3 — CSV import workflow (not started)
+- **Completed:** Milestones 0–3 (foundation · auth/tenancy · core catalogue · CSV import)
+- **Next milestone:** Milestone 4 — Snapshot & diff engine (in progress)
 - **Runtime:** Node.js 24 LTS · pnpm · Turborepo · Next.js 16 App Router · TypeScript strict
+
+## Milestone 3 — CSV import workflow ✅
+
+| Area                                 | Status | Notes                                                                                                                                                                                                                                   |
+| ------------------------------------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Import engine (`@bai/import-engine`) | ✅     | streaming CSV parse, per-row validation + reason codes, dedup (identical vs conflicting), file checksum. Executable tests: baseline→6 accepted (IMP-01), invalid_rows→expected codes (IMP-02), duplicates (IMP-04)                      |
+| Migration                            | ✅     | `imports`, `import_rejections`, `import_status` enum, org-scoped RLS, `claim_collection_job` (FOR UPDATE SKIP LOCKED), heartbeat, insert-trigger that enqueues run+job, curated `import_sources` view, private storage bucket (guarded) |
+| DB tests                             | ✅     | JOB-01 atomic claim, imports/rejections RLS, viewer-blocked insert, trigger enqueue (24 total)                                                                                                                                          |
+| Worker                               | ✅     | postgres.js queue (claim/heartbeat/complete/stale-recovery), import runner (validate→persist rejections + raw observations + metrics, transactional), poll loop dispatch                                                                |
+| Web                                  | ✅     | imports list/detail, upload wizard (presigned upload + RLS insert), signed rejections CSV download (injection-safe)                                                                                                                     |
+
+**Not executable here** (no Docker/Supabase/Storage): live async worker run, storage upload/download, and the 25k-row async timing (IMP-05). The import _logic_ (parse/validate/dedup/idempotency) is fully unit-tested; the queue claim + RLS + enqueue trigger are executed in PGlite. Snapshot/source-listing creation from accepted rows is the M4 snapshot engine (this runner records raw-observation evidence + rejections + metrics).
 
 ## Milestone 2 — Core data schema and fixture catalogue ✅
 

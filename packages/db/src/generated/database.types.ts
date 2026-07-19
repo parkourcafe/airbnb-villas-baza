@@ -335,8 +335,81 @@ export interface Database {
         Update: Record<string, never>;
         Relationships: [];
       };
+      imports: {
+        Row: {
+          id: string;
+          organization_id: string;
+          dataset_id: string;
+          source_id: string;
+          status: Database["public"]["Enums"]["import_status"];
+          input_object_path: string | null;
+          original_filename: string | null;
+          file_checksum: string | null;
+          column_mapping: Json;
+          requested_by: string | null;
+          collection_run_id: string | null;
+          total_rows: number;
+          accepted_rows: number;
+          rejected_rows: number;
+          duplicate_rows: number;
+          warning_count: number;
+          error_summary: string | null;
+          created_at: string;
+          started_at: string | null;
+          finished_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          organization_id: string;
+          dataset_id: string;
+          source_id: string;
+          status?: Database["public"]["Enums"]["import_status"];
+          input_object_path?: string | null;
+          original_filename?: string | null;
+          file_checksum?: string | null;
+          column_mapping?: Json;
+          requested_by?: string | null;
+        };
+        Update: {
+          status?: Database["public"]["Enums"]["import_status"];
+          collection_run_id?: string | null;
+          total_rows?: number;
+          accepted_rows?: number;
+          rejected_rows?: number;
+          duplicate_rows?: number;
+          warning_count?: number;
+          error_summary?: string | null;
+          started_at?: string | null;
+          finished_at?: string | null;
+        };
+        Relationships: [];
+      };
+      import_rejections: {
+        Row: {
+          id: number;
+          import_id: string;
+          row_number: number;
+          error_code: string;
+          error_message: string | null;
+          raw_row: Json | null;
+          created_at: string;
+        };
+        Insert: Record<string, never>;
+        Update: Record<string, never>;
+        Relationships: [];
+      };
     };
-    Views: Record<never, never>;
+    Views: {
+      import_sources: {
+        Row: {
+          id: string;
+          key: string;
+          display_name: string;
+          access_mode: string;
+        };
+        Relationships: [];
+      };
+    };
     Functions: Record<never, never>;
     Enums: {
       member_role: "owner" | "admin" | "analyst" | "viewer";
@@ -358,6 +431,15 @@ export interface Database {
         | "reactivated"
         | "archived";
       confidence_level: "low" | "medium" | "high";
+      import_status:
+        | "uploaded"
+        | "validating"
+        | "ready"
+        | "processing"
+        | "completed"
+        | "completed_with_errors"
+        | "failed"
+        | "cancelled";
       event_type:
         | "listing_created"
         | "listing_first_miss"
