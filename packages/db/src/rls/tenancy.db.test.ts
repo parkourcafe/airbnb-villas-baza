@@ -24,7 +24,7 @@ describe("identity & tenancy RLS", () => {
     const { rows } = await ctx.db.query<{ count: string }>(
       "select count(*)::text as count from public.profiles",
     );
-    expect(rows[0]?.count).toBe("5");
+    expect(rows[0]?.count).toBe("6");
   });
 
   it("lets a user read only their own profile", async () => {
@@ -55,7 +55,7 @@ describe("identity & tenancy RLS", () => {
     const org1 = await ctx.db.query<{ count: string }>(
       "select count(*)::text as count from public.organization_members",
     );
-    expect(org1.rows[0]?.count).toBe("2");
+    expect(org1.rows[0]?.count).toBe("3");
 
     await ctx.actAs(ctx.ids.owner2);
     const org2 = await ctx.db.query<{ count: string }>(
@@ -143,5 +143,64 @@ describe("identity & tenancy RLS", () => {
          values ('${ctx.ids.org1}', '${ctx.ids.outsider}', 'admin')`,
       ),
     ).rejects.toThrow(/row-level security/i);
+  });
+
+  it("restricts dataset-access grants to dataset administrators (Finding #1)", async () => {
+    // Owner of org2 cannot grant org2 access to dataset C (owned by org1).
+    await ctx.actAs(ctx.ids.owner2);
+    await expect(
+      ctx.db.query(
+        `insert into public.organization_dataset_access (organization_id, dataset_id, access_level)
+         values ('${ctx.ids.org2}', '${ctx.ids.datasetC}', 'read')`,
+      ),
+    ).rejects.toThrow(/row-level security/i);
+
+    // The dataset's owning-org admin (owner1) may grant access to it.
+    await ctx.actAs(ctx.ids.owner1);
+    const ok = await ctx.db.query(
+      `insert into public.organization_dataset_access (organization_id, dataset_id, access_level)
+       values ('${ctx.ids.org1}', '${ctx.ids.datasetC}', 'manage')`,
+    );
+    expect(ok.affectedRows).toBe(1);
+  });
+
+  it("forbids clients from writing the privileged is_system_owner column (Finding #2)", async () => {
+    await ctx.actAsSuperuser();
+    const { rows } = await ctx.db.query<{
+      sys: boolean;
+      name: boolean;
+    }>(`
+      select
+        has_column_privilege('authenticated','public.profiles','is_system_owner','update') as sys,
+        has_column_privilege('authenticated','public.profiles','full_name','update')       as name
+    `);
+    expect(rows[0]?.sys).toBe(false);
+    expect(rows[0]?.name).toBe(true);
+  });
+
+  it("blocks an admin from becoming owner or removing an owner (Finding #3)", async () => {
+    // Admin cannot promote themselves to owner.
+    await ctx.actAs(ctx.ids.admin1);
+    await expect(
+      ctx.db.query(
+        `update public.organization_members set role = 'owner'
+         where organization_id = '${ctx.ids.org1}' and user_id = '${ctx.ids.admin1}'`,
+      ),
+    ).rejects.toThrow(/row-level security/i);
+
+    // Admin cannot delete the owner's membership row.
+    const adminDelete = await ctx.db.query(
+      `delete from public.organization_members
+       where organization_id = '${ctx.ids.org1}' and user_id = '${ctx.ids.owner1}'`,
+    );
+    expect(adminDelete.affectedRows).toBe(0);
+
+    // The owner may change an admin's role.
+    await ctx.actAs(ctx.ids.owner1);
+    const ownerUpdate = await ctx.db.query(
+      `update public.organization_members set role = 'analyst'
+       where organization_id = '${ctx.ids.org1}' and user_id = '${ctx.ids.admin1}'`,
+    );
+    expect(ownerUpdate.affectedRows).toBe(1);
   });
 });

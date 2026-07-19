@@ -25,7 +25,7 @@ This document tracks milestone progress for Bali Accommodation Intelligence
 | Protected `/app` area + shell                                      | ✅     | proxy guard + layout guard; org/dataset switchers persist via cookies                                                 |
 | App shell routes                                                   | ✅     | overview, properties, events, imports, watchlists, reports, settings/{organization,team} — empty states, no fake data |
 | Role-gated controls                                                | ✅     | viewer mutation controls disabled (`canMutateData`/`canManageMembers`)                                                |
-| RLS tests                                                          | ✅     | 9 executed tests (see verification note)                                                                              |
+| RLS tests                                                          | ✅     | 12 executed tests (see verification note)                                                                             |
 | Open-redirect + capability unit tests                              | ✅     | in `@bai/domain`                                                                                                      |
 | E2E                                                                | ✅     | unauthenticated `/app` → login (AUTH-01); login form renders                                                          |
 
@@ -65,6 +65,18 @@ where available):
 - `private` and `app` schemas are excluded from the Data API (`config.toml`).
 - Post-login redirect is open-redirect safe (`sanitizeInternalPath`).
 - No secrets committed; `.env.example` is names-only.
+
+An adversarial security review of the diff found grants/schema-exposure, SSR
+auth, open-redirect and secret handling clean, and three RLS hardening issues,
+all fixed and regression-tested:
+
+1. the `organization_dataset_access` INSERT policy now also requires the caller
+   to administer the target dataset (via `private.user_can_administer_dataset`),
+   closing a cross-tenant dataset-access grant;
+2. `profiles` write grants are column-scoped so clients cannot set the
+   server-only `is_system_owner` flag;
+3. owner-role membership changes are gated to owners, so an admin cannot
+   self-escalate to owner or remove an owner.
 
 ## Milestone 0 — Repository foundation ✅
 

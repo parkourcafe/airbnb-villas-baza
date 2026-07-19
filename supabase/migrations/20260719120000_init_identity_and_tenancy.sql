@@ -216,6 +216,28 @@ as $$
   );
 $$;
 
+-- May the user grant/revoke access to this dataset? Only an owner/admin of the
+-- dataset's owning organization can administer its access grants. This is what
+-- stops an org admin from granting their own org access to another org's
+-- dataset by id.
+create or replace function private.user_can_administer_dataset(uid uuid, ds uuid)
+  returns boolean
+  language sql
+  security definer
+  set search_path = ''
+  stable
+as $$
+  select exists (
+    select 1
+    from public.datasets d
+    join public.organization_members m
+      on m.organization_id = d.owner_organization_id
+    where d.id = ds
+      and m.user_id = uid
+      and m.role in ('owner', 'admin')
+  );
+$$;
+
 -- ---------------------------------------------------------------------------
 -- Row Level Security
 -- ---------------------------------------------------------------------------
@@ -254,23 +276,42 @@ create policy organizations_update_admin on public.organizations
 create policy organization_members_select on public.organization_members
   for select to authenticated
   using (private.is_org_member((select auth.uid()), organization_id));
+-- Owners may manage any member (including other owners). Admins may manage
+-- non-owner members only, and cannot create/promote owners - this prevents an
+-- admin from self-escalating to owner or removing an owner.
 create policy organization_members_insert_admin on public.organization_members
   for insert to authenticated
   with check (
-    private.user_has_org_role((select auth.uid()), organization_id, array['owner', 'admin']::app.member_role[])
+    private.user_has_org_role((select auth.uid()), organization_id, array['owner']::app.member_role[])
+    or (
+      private.user_has_org_role((select auth.uid()), organization_id, array['admin']::app.member_role[])
+      and role <> 'owner'
+    )
   );
 create policy organization_members_update_admin on public.organization_members
   for update to authenticated
   using (
-    private.user_has_org_role((select auth.uid()), organization_id, array['owner', 'admin']::app.member_role[])
+    private.user_has_org_role((select auth.uid()), organization_id, array['owner']::app.member_role[])
+    or (
+      private.user_has_org_role((select auth.uid()), organization_id, array['admin']::app.member_role[])
+      and role <> 'owner'
+    )
   )
   with check (
-    private.user_has_org_role((select auth.uid()), organization_id, array['owner', 'admin']::app.member_role[])
+    private.user_has_org_role((select auth.uid()), organization_id, array['owner']::app.member_role[])
+    or (
+      private.user_has_org_role((select auth.uid()), organization_id, array['admin']::app.member_role[])
+      and role <> 'owner'
+    )
   );
 create policy organization_members_delete_admin on public.organization_members
   for delete to authenticated
   using (
-    private.user_has_org_role((select auth.uid()), organization_id, array['owner', 'admin']::app.member_role[])
+    private.user_has_org_role((select auth.uid()), organization_id, array['owner']::app.member_role[])
+    or (
+      private.user_has_org_role((select auth.uid()), organization_id, array['admin']::app.member_role[])
+      and role <> 'owner'
+    )
   );
 
 -- datasets: accessible to organizations granted access; managed by manage access.
@@ -290,6 +331,7 @@ create policy org_dataset_access_insert_admin on public.organization_dataset_acc
   for insert to authenticated
   with check (
     private.user_has_org_role((select auth.uid()), organization_id, array['owner', 'admin']::app.member_role[])
+    and private.user_can_administer_dataset((select auth.uid()), dataset_id)
   );
 create policy org_dataset_access_delete_admin on public.organization_dataset_access
   for delete to authenticated
@@ -313,8 +355,13 @@ grant execute on function private.is_org_member(uuid, uuid) to authenticated;
 grant execute on function private.user_has_org_role(uuid, uuid, app.member_role[]) to authenticated;
 grant execute on function private.user_can_access_dataset(uuid, uuid) to authenticated;
 grant execute on function private.user_can_manage_dataset(uuid, uuid) to authenticated;
+grant execute on function private.user_can_administer_dataset(uuid, uuid) to authenticated;
 
-grant select, insert, update on public.profiles to authenticated;
+-- Column-scoped grants keep clients from writing the server-only
+-- `is_system_owner` flag (it is set by the seed/service role only).
+grant select on public.profiles to authenticated;
+grant insert (id, full_name, avatar_url, timezone) on public.profiles to authenticated;
+grant update (full_name, avatar_url, timezone) on public.profiles to authenticated;
 grant select, update on public.organizations to authenticated;
 grant select, insert, update, delete on public.organization_members to authenticated;
 grant select, update on public.datasets to authenticated;

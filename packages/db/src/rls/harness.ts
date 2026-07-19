@@ -39,11 +39,14 @@ export const TENANCY_IDS = {
   owner2: "00000000-0000-0000-0000-0000000a0003",
   outsider: "00000000-0000-0000-0000-0000000a0004",
   extra: "00000000-0000-0000-0000-0000000a0005",
+  admin1: "00000000-0000-0000-0000-0000000a0006",
   org1: "00000000-0000-0000-0000-0000000b0001",
   org2: "00000000-0000-0000-0000-0000000b0002",
   org3: "00000000-0000-0000-0000-0000000b0003",
   datasetA: "00000000-0000-0000-0000-0000000c0001",
   datasetB: "00000000-0000-0000-0000-0000000c0002",
+  // datasetC is owned by org1 but has no access grant yet.
+  datasetC: "00000000-0000-0000-0000-0000000c0003",
 } as const;
 
 function readMigrations(): string {
@@ -123,7 +126,8 @@ async function seed(db: PGlite): Promise<void> {
       ('${i.viewer1}', 'viewer1@demo.local', '{"full_name":"Viewer One"}'),
       ('${i.owner2}',  'owner2@demo.local',  '{"full_name":"Owner Two"}'),
       ('${i.outsider}','outsider@demo.local','{"full_name":"Outsider"}'),
-      ('${i.extra}',   'extra@demo.local',   '{"full_name":"Extra"}');
+      ('${i.extra}',   'extra@demo.local',   '{"full_name":"Extra"}'),
+      ('${i.admin1}',  'admin1@demo.local',  '{"full_name":"Admin One"}');
 
     insert into public.organizations (id, name, slug) values
       ('${i.org1}', 'Org One', 'org-one'),
@@ -132,13 +136,15 @@ async function seed(db: PGlite): Promise<void> {
 
     insert into public.organization_members (organization_id, user_id, role) values
       ('${i.org1}', '${i.owner1}',  'owner'),
+      ('${i.org1}', '${i.admin1}',  'admin'),
       ('${i.org1}', '${i.viewer1}', 'viewer'),
       ('${i.org2}', '${i.owner2}',  'owner'),
       ('${i.org3}', '${i.outsider}','owner');
 
-    insert into public.datasets (id, name, slug, is_demo) values
-      ('${i.datasetA}', 'Dataset A', 'dataset-a', true),
-      ('${i.datasetB}', 'Dataset B', 'dataset-b', true);
+    insert into public.datasets (id, name, slug, is_demo, owner_organization_id) values
+      ('${i.datasetA}', 'Dataset A', 'dataset-a', true, '${i.org1}'),
+      ('${i.datasetB}', 'Dataset B', 'dataset-b', true, '${i.org2}'),
+      ('${i.datasetC}', 'Dataset C', 'dataset-c', true, '${i.org1}');
 
     insert into public.organization_dataset_access (organization_id, dataset_id, access_level) values
       ('${i.org1}', '${i.datasetA}', 'manage'),
