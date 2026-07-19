@@ -16,6 +16,7 @@
     "clean": "rm -rf .next dist .turbo coverage playwright-report test-results *.tsbuildinfo"
   },
   "dependencies": {
+    "@bai/db": "workspace:*",
     "@bai/domain": "workspace:*",
     "@bai/ui": "workspace:*",
     "@supabase/ssr": "0.12.3",

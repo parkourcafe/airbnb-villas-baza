@@ -5,46 +5,81 @@ This document tracks milestone progress for Bali Accommodation Intelligence
 
 ## Current state
 
-- **Active milestone:** Milestone 0 — Repository foundation ✅ complete
-- **Next milestone:** Milestone 1 — Local Supabase, auth and tenancy (not started)
-- **Runtime:** Node.js 24 LTS · pnpm · Turborepo · Next.js App Router · TypeScript strict
+- **Completed:** Milestone 0 (foundation) · Milestone 1 (Supabase schema, auth, tenancy)
+- **Next milestone:** Milestone 2 — Core data schema and fixture catalogue (not started)
+- **Runtime:** Node.js 24 LTS · pnpm · Turborepo · Next.js 16 App Router · TypeScript strict
+
+## Milestone 1 — Local Supabase, auth and tenancy ✅
+
+| Area                                                               | Status | Notes                                                                                                                 |
+| ------------------------------------------------------------------ | ------ | --------------------------------------------------------------------------------------------------------------------- |
+| Supabase project layout (`supabase/config.toml`, migrations, seed) | ✅     | Data API scoped to `public` only                                                                                      |
+| Identity/tenancy migration                                         | ✅     | profiles, organizations, organization_members, datasets, organization_dataset_access                                  |
+| Enums + extensions                                                 | ✅     | `app.member_role/dataset_status/access_level`; citext/pgcrypto in `extensions`                                        |
+| RLS on every exposed table                                         | ✅     | SELECT/mutation policies per table                                                                                    |
+| RLS helper functions                                               | ✅     | `private.*` SECURITY DEFINER, fixed `search_path`, execute granted to `authenticated` only                            |
+| Explicit grants                                                    | ✅     | anon gets nothing on tenancy tables; authenticated is row-restricted                                                  |
+| Seed data (demo, marked)                                           | ✅     | demo org/dataset/users; `is_demo`/`is_system_owner`                                                                   |
+| Supabase SSR auth                                                  | ✅     | server + browser + proxy clients, lazy env, `getUser()` (not `getSession`)                                            |
+| Login / logout                                                     | ✅     | email+password; open-redirect-safe `next`                                                                             |
+| Protected `/app` area + shell                                      | ✅     | proxy guard + layout guard; org/dataset switchers persist via cookies                                                 |
+| App shell routes                                                   | ✅     | overview, properties, events, imports, watchlists, reports, settings/{organization,team} — empty states, no fake data |
+| Role-gated controls                                                | ✅     | viewer mutation controls disabled (`canMutateData`/`canManageMembers`)                                                |
+| RLS tests                                                          | ✅     | 9 executed tests (see verification note)                                                                              |
+| Open-redirect + capability unit tests                              | ✅     | in `@bai/domain`                                                                                                      |
+| E2E                                                                | ✅     | unauthenticated `/app` → login (AUTH-01); login form renders                                                          |
+
+### Verification note — how RLS was executed without Docker
+
+The execution environment has **no running Docker daemon**, and `supabase.com`
+/ GitHub releases are blocked by the network policy, so the Supabase CLI and the
+full local stack could not run here. To still verify the schema and policies by
+**execution** (not just review), the migration is applied to **PGlite** (an
+in-process WASM Postgres) with the Supabase-provided objects (`auth` schema,
+`auth.users`, `auth.uid()`, the anon/authenticated/service_role roles)
+reproduced, and the RLS matrix is asserted as each role. `pnpm test:db` runs
+this suite.
+
+What this **does** verify: table/enum/trigger creation, every RLS policy,
+tenant isolation, viewer read-only enforcement, owner membership management,
+grant scoping (anon denied), and the SECURITY DEFINER helper (no policy
+recursion).
+
+What could **not** be executed here (requires Docker/Supabase; wired up to run
+where available):
+
+- `supabase start` / `db reset` and the auth GoTrue server (live login);
+- `supabase gen types` — `packages/db/src/generated/database.types.ts` is
+  hand-authored to match the migration until the CLI can regenerate it
+  (`pnpm db:types`);
+- `supabase db lint` / database advisors;
+- Data-API schema scoping is asserted structurally (grants) rather than through
+  a running PostgREST.
+
+### Security posture (Milestone 1)
+
+- Service-role key never reaches the browser; the service client refuses to
+  construct client-side and is created lazily.
+- Authorization derives only from membership/access tables — never from user
+  metadata (`is_system_owner` is a server-only flag, unused by RLS).
+- `private` and `app` schemas are excluded from the Data API (`config.toml`).
+- Post-login redirect is open-redirect safe (`sanitizeInternalPath`).
+- No secrets committed; `.env.example` is names-only.
 
 ## Milestone 0 — Repository foundation ✅
 
-| Area                                                       | Status | Notes                                                                                       |
-| ---------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------- |
-| Git + `.nvmrc` (Node 24) + `packageManager`                | ✅     | pnpm workspace + Turborepo                                                                  |
-| TypeScript strict base config                              | ✅     | `tsconfig.base.json`, shared presets in `@bai/config`                                       |
-| Shared ESLint (flat) + Prettier                            | ✅     | `@bai/config` exposes `eslint/*` and `prettier`                                             |
-| `.editorconfig`, `.gitignore`, `.env.example`, `README.md` | ✅     | Secrets are names-only in `.env.example`                                                    |
-| `apps/web` (Next.js App Router, Tailwind, `src/`)          | ✅     | Home + methodology + `/api/health`                                                          |
-| `apps/worker` (Node TS)                                    | ✅     | Structured logger, smoke mode, graceful shutdown                                            |
-| `packages/*` scaffolds                                     | ✅     | domain, db, source-sdk, import/snapshot/event engines, reporting, ui, config, test-fixtures |
-| shadcn/ui-style kit + theme tokens                         | ✅     | Button, Card, Input, Table, Badge, Sheet, Dialog, DropdownMenu, Tabs, Skeleton              |
-| Vitest unit smoke tests                                    | ✅     | One per meaningful package                                                                  |
-| Playwright web E2E smoke test                              | ✅     | Home render + health endpoint                                                               |
-| Worker smoke test                                          | ✅     | Config defaults + smoke run exits 0                                                         |
-| CI workflow                                                | ✅     | `.github/workflows/ci.yml`                                                                  |
-| `docs/IMPLEMENTATION_STATUS.md` + `docs/adr/`              | ✅     | 8 ADR placeholders created                                                                  |
+(Complete — see git history. Monorepo, tooling, design system, engines
+scaffolding, CI, ADRs.)
 
-### Stop condition honored
+### Cross-cutting deviations (environment)
 
-Supabase is **not** set up in milestone 0. `pnpm supabase:status` and
-`pnpm db:types` are intentional no-ops until milestone 1, and `test:db` scripts
-report that database tests arrive later.
-
-### Deviations
-
-- **Node runtime for verification.** The spec pins Node 24 LTS (`.nvmrc` = 24,
-  `engines.node >= 24`). Node 24.18.0 was installed in the execution environment
-  to run all checks on the pinned runtime.
-- **Fonts.** Per the plan, no bundled fonts from any provided HTML are imported.
-  A system font-stack fallback (`--font-sans` / `--font-mono`) is used instead of
-  a remote web-font fetch to keep the build free of network dependencies.
-- **Lint during build.** `next build` has ESLint disabled (`eslint.ignoreDuringBuilds`)
-  because linting runs as a dedicated `pnpm lint` task using the shared flat config.
+- **Node 24** installed via nvm to run all checks on the pinned runtime.
+- **Dependencies** updated to latest stable, holding `@playwright/test` at
+  1.56.1 (matches the only available Chromium build), and Tailwind 3 / Zod 3 /
+  ESLint 9 / TypeScript 5.9 (v4/v10/v7 are unsupported-by-toolchain or breaking).
+- **Fonts:** system font stack (no remote/bundled font fetch).
 
 ## Later milestones
 
-Milestones 1–10 are defined in `docs/bai_codex_spec/05_CODEX_IMPLEMENTATION_PLAN.md`
+Milestones 2–10 are defined in `docs/bai_codex_spec/05_CODEX_IMPLEMENTATION_PLAN.md`
 and have not been started.

@@ -6,6 +6,15 @@
  * These are source-agnostic and carry no database or network dependency.
  */
 
+export const MEMBER_ROLE = ["owner", "admin", "analyst", "viewer"] as const;
+export type MemberRole = (typeof MEMBER_ROLE)[number];
+
+export const DATASET_STATUS = ["active", "paused", "archived"] as const;
+export type DatasetStatus = (typeof DATASET_STATUS)[number];
+
+export const ACCESS_LEVEL = ["read", "manage"] as const;
+export type AccessLevel = (typeof ACCESS_LEVEL)[number];
+
 export const OBSERVATION_STATUS = [
   "active",
   "unavailable",

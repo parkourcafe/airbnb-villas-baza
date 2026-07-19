@@ -18,8 +18,8 @@
     "test:e2e": "turbo run test:e2e",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,mjs,cjs,json,md,css}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mjs,cjs,json,md,css}\"",
-    "supabase:status": "echo \"supabase is introduced in milestone 1; not configured yet\" && exit 0",
-    "db:types": "echo \"database types are generated in milestone 1; not configured yet\" && exit 0",
+    "supabase:status": "supabase status",
+    "db:types": "supabase gen types typescript --local --schema public > packages/db/src/generated/database.types.ts",
     "clean": "turbo run clean && rm -rf node_modules"
   },
   "devDependencies": {

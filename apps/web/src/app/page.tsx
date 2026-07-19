@@ -1,5 +1,7 @@
+import Link from "next/link";
 import {
   Badge,
+  Button,
   Card,
   CardContent,
   CardDescription,
@@ -34,10 +36,15 @@ export default function HomePage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-12 px-6 py-16">
       <header className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge>Milestone 0 · Foundation</Badge>
-          <Badge variant="warning">Demo data only</Badge>
-          <Badge variant="outline">UTC stored · Asia/Makassar display</Badge>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge>Milestone 1 · Auth & tenancy</Badge>
+            <Badge variant="warning">Demo data only</Badge>
+            <Badge variant="outline">UTC stored · Asia/Makassar display</Badge>
+          </div>
+          <Button asChild size="sm">
+            <Link href="/login">Sign in</Link>
+          </Button>
         </div>
         <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">
           Bali Accommodation Intelligence

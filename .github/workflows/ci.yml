@@ -41,6 +41,9 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
+      - name: Database RLS tests (PGlite, no Docker)
+        run: pnpm test:db
+
       - name: Build
         run: pnpm build
 

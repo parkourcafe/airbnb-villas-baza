@@ -1,0 +1,42 @@
+# Supabase local configuration.
+# The Data API (PostgREST) is intentionally scoped to public + graphql_public
+# ONLY. The `private` and `app` schemas are never exposed through the Data API,
+# which is what keeps operational/credential tables unreachable from the browser.
+project_id = "bali-accommodation-intelligence"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[db.pooler]
+enabled = false
+
+[studio]
+enabled = true
+port = 54323
+
+[inbucket]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/callback"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false

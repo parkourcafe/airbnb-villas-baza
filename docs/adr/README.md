@@ -21,3 +21,4 @@ Each ADR captures one significant decision using this structure:
 | [0006](./0006-no-unauthorized-live-scraping.md)   | No unauthorized live scraping   | Accepted |
 | [0007](./0007-immutable-snapshots.md)             | Immutable snapshots             | Accepted |
 | [0008](./0008-manual-entity-resolution-first.md)  | Manual entity resolution first  | Accepted |
+| [0009](./0009-rls-helpers-and-pglite-testing.md)  | RLS helpers + PGlite testing    | Accepted |

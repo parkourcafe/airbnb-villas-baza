@@ -23,6 +23,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@bai/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@bai/domain':
         specifier: workspace:*
         version: link:../../packages/domain
@@ -160,6 +163,9 @@ importers:
       '@bai/domain':
         specifier: workspace:*
         version: link:../domain
+      '@supabase/supabase-js':
+        specifier: 2.110.7
+        version: 2.110.7
       zod:
         specifier: 3.25.76
         version: 3.25.76
@@ -167,6 +173,9 @@ importers:
       '@bai/config':
         specifier: workspace:*
         version: link:../config
+      '@electric-sql/pglite':
+        specifier: 0.5.4
+        version: 0.5.4
       '@types/node':
         specifier: 22.20.1
         version: 22.20.1
@@ -459,6 +468,9 @@ packages:
   '@babel/types@7.29.7':
     resolution: {integrity: sha512-4zBIxpPzowiZpusoFkyGVwakdRJUyuH5PxQ/PrqghfdFWWasvnCdPfQXHrenDai+gyLARulZjZowCOj6fjT4pA==}
     engines: {node: '>=6.9.0'}
+
+  '@electric-sql/pglite@0.5.4':
+    resolution: {integrity: sha512-yYZUyyXrHU7tPlCjwZQJ6hIG9DscdCCn7Uk0mYKwC1FeHX286AbcmFveMiRBEak8e9iPupjsoVImN3yJZVed2g==}
 
   '@emnapi/runtime@1.11.2':
     resolution: {integrity: sha512-kyOl3X0DuTiT1h2ft8r2fYO8JYtU9a9Xis/zBSiGArNaagCOWx90N1k2wxp18czFDH+OgcWGb5ZP/XMt3dcyPA==}
@@ -3537,6 +3549,8 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
+
+  '@electric-sql/pglite@0.5.4': {}
 
   '@emnapi/runtime@1.11.2':
     dependencies:

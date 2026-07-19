@@ -25,5 +25,14 @@ export default defineConfig({
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    // Well-formed dummy Supabase config so the middleware/clients construct.
+    // The unauthenticated flows under test never make a network call (no session).
+    env: {
+      NEXT_PUBLIC_SUPABASE_URL:
+        process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321",
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+        "sb_publishable_dummy_key_for_e2e",
+    },
   },
 });

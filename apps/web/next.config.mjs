@@ -18,8 +18,8 @@ const nextConfig = {
     "@bai/source-sdk",
     "@bai/test-fixtures",
   ],
-  // Linting runs as a dedicated `pnpm lint` task (flat config) rather than during build.
-  eslint: { ignoreDuringBuilds: true },
+  // Next 16 no longer runs ESLint during `next build`; linting is the dedicated
+  // `pnpm lint` task (flat config).
   // Silence the monorepo lockfile-root inference warning.
   outputFileTracingRoot: repoRoot,
 };

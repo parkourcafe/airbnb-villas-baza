@@ -20,12 +20,30 @@ evidence-backed events — using observation language, never legal conclusions.
 ```bash
 corepack enable            # provisions the pinned pnpm
 pnpm install --frozen-lockfile
+cp .env.example .env       # fill in Supabase values
 pnpm dev                   # runs web + worker in dev
 ```
 
-- Web app: http://localhost:3000
+- Web app: http://localhost:3000 (sign in at `/login`, dashboard under `/app`)
 - Worker: long-running process (heartbeat logs). Smoke run:
   `pnpm --filter @bai/worker smoke`.
+
+### Local database (Supabase)
+
+The identity/tenancy schema lives in `supabase/`. With Docker and the
+[Supabase CLI](https://supabase.com/docs/guides/cli) installed:
+
+```bash
+supabase start             # local Postgres + Auth + Studio
+supabase db reset          # applies migrations + seed.sql
+pnpm db:types              # regenerate packages/db generated types
+```
+
+Demo credentials (local only, from `supabase/seed.sql`):
+`owner@demo.local` / `demo-password-owner` and
+`viewer@demo.local` / `demo-password-viewer`.
+
+RLS is verified without Docker via PGlite — see `pnpm test:db`.
 
 ## Verification
 
@@ -33,12 +51,12 @@ pnpm dev                   # runs web + worker in dev
 pnpm lint          # ESLint (flat config)
 pnpm typecheck     # tsc --noEmit across the workspace
 pnpm test          # Vitest unit tests
-pnpm test:e2e      # Playwright web smoke test
+pnpm test:db       # RLS/tenancy tests (PGlite, no Docker needed)
+pnpm test:e2e      # Playwright web smoke + auth tests
 pnpm build         # production builds (web + worker)
 pnpm format:check  # Prettier
 
-# Introduced in milestone 1 (currently no-ops):
-pnpm test:db
+# Require the Supabase CLI + Docker (no-ops without them):
 pnpm supabase:status
 pnpm db:types
 ```

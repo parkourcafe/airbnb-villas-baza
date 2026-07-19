@@ -36,3 +36,10 @@ export const rawObservationSchema = z.object({
 export type RawObservationInput = z.infer<typeof rawObservationSchema>;
 
 export const sourceCapabilitySchema = z.enum(SOURCE_CAPABILITY);
+
+/** Email/password credentials for the MVP login form (untrusted boundary). */
+export const credentialsSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8, "password must be at least 8 characters"),
+});
+export type Credentials = z.infer<typeof credentialsSchema>;
