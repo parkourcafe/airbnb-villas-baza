@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
+import { getServiceClient } from "@bai/db";
 
 /**
  * Protected cron entry point (8.5). A scheduler calls this with the shared
@@ -40,11 +41,22 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  // Enqueue due jobs only. The set of scheduled sources and their cadence is
-  // owned by the worker scheduler; this endpoint is the trigger, and it never
-  // enqueues a job for a non-approved source (the DB compliance gate + the
-  // worker's compliance gate both enforce that).
-  return NextResponse.json({ ok: true, enqueued: 0 });
+  // Enqueue due jobs only. `enqueue_due_collections` (service-role) creates a
+  // run + job for every schedule whose cadence has elapsed and whose source is
+  // approved and automation-allowed. The DB compliance gate on collection_runs
+  // guarantees a non-approved source can never be enqueued.
+  try {
+    const { data, error } = await getServiceClient().rpc(
+      "enqueue_due_collections",
+    );
+    if (error) throw error;
+    return NextResponse.json({ ok: true, enqueued: data ?? 0 });
+  } catch {
+    return NextResponse.json(
+      { error: "enqueue failed" },
+      { status: 500 },
+    );
+  }
 }
 
 export function GET(): NextResponse {

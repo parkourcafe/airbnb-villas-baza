@@ -622,6 +622,33 @@ export interface Database {
         Update: Record<string, never>;
         Relationships: [];
       };
+      collection_schedules: {
+        Row: {
+          id: string;
+          dataset_id: string;
+          source_id: string;
+          cadence_minutes: number;
+          enabled: boolean;
+          last_enqueued_at: string | null;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          dataset_id: string;
+          source_id: string;
+          cadence_minutes?: number;
+          enabled?: boolean;
+        };
+        Update: {
+          cadence_minutes?: number;
+          enabled?: boolean;
+          last_enqueued_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       import_sources: {
@@ -630,6 +657,22 @@ export interface Database {
           key: string;
           display_name: string;
           access_mode: string;
+        };
+        Relationships: [];
+      };
+      source_catalog: {
+        Row: {
+          id: string;
+          key: string;
+          display_name: string;
+          access_mode: string;
+          compliance_status: string;
+          automation_allowed: boolean;
+          capabilities: string[];
+          terms_reviewed_at: string | null;
+          review_expires_at: string | null;
+          restriction_reason: string | null;
+          rate_limit_policy: Json | null;
         };
         Relationships: [];
       };
@@ -646,6 +689,10 @@ export interface Database {
       rollback_merge: {
         Args: { p_redirect: string; p_reason?: string | null };
         Returns: undefined;
+      };
+      enqueue_due_collections: {
+        Args: Record<string, never>;
+        Returns: number;
       };
     };
     Enums: {
