@@ -5,9 +5,38 @@ This document tracks milestone progress for Bali Accommodation Intelligence
 
 ## Current state
 
-- **Completed:** Milestones 0–9 (… source SDK & scheduling · manual entity resolution)
-- **Next milestone:** Milestone 10 — Security, performance and launch hardening
+- **Completed:** Milestones 0–10 — **all MVP milestones done**.
 - **Runtime:** Node.js 24 LTS · pnpm · Turborepo · Next.js 16 App Router · TypeScript strict
+- **Gates:** `lint · typecheck · test · test:db · build · test:e2e` all green.
+
+## Milestone 10 — Security, performance and launch hardening ✅
+
+| Area                       | Status | Notes                                                                                                                          |
+| -------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| Security checklist         | ✅     | `docs/SECURITY_CHECKLIST.md` maps every item (RLS, grants, authz, SECURITY DEFINER, secrets, cron, injection) to its enforcement + verification |
+| CSV formula injection      | ✅     | `escapeCsvCell` (`= + - @ \t \r` guard + RFC-4180 quoting), unit-tested                                                        |
+| Input fuzzing              | ✅     | adversarial field values + malformed CSV never crash; bad rows rejected with typed codes (`import-engine/fuzz.test`)           |
+| Cron auth / admin authz    | ✅     | constant-time `CRON_SECRET`, fail-closed; merge/review admin-gated (M8/M9)                                                     |
+| Audit integrity            | ✅     | merge + review write `audit_logs`; dismissed events retained                                                                   |
+| Reliability / idempotency  | ✅     | deterministic dedupe keys + unique constraints across snapshots/diffs/events; stale-job recovery; degraded-run suppression     |
+| Operations runbook         | ✅     | `docs/RUNBOOK.md`: launch checklist, source disable switch, data-correction workflow, incident checklist, backup expectations |
+| Observation language / UX  | ✅     | methodology page; "Likely inactive" labelling; UTC-stored / Asia-Makassar display; demo rows marked                            |
+
+**Acceptance (M10):** full test suite passes ✓ · production build passes ✓ · security checklist completed ✓ · no live restricted source ✓. Database advisors (`supabase db lint`) and `pnpm audit` are documented to run in CI where a live DB/registry is available.
+
+## Test coverage summary
+
+- **Engines (pure, unit):** import validation + fuzz, snapshot/diff (golden per field type), lifecycle timeline (LIFE-01…10) + events (EVT-03…07) + run-health, source-adapter contracts, CSV injection, domain authz/geo/redirect.
+- **Database (PGlite, real migrations):** 45 tests across tenancy, catalogue, imports, snapshot/diff, lifecycle/events, watchlists/leads/reports, source compliance gate, and property merge.
+- **E2E (Playwright):** auth redirect, login render, home, health, cron 401/405.
+
+### Environment caveats (unchanged, wired to run where available)
+
+No Docker / Supabase CLI here, so RLS + SQL are executed in **PGlite** with
+PostGIS DDL preprocessed; live Storage, the GoTrue login round-trip, PostGIS
+spatial queries, `supabase db lint`/advisors, and `pnpm audit` run in CI against
+a live stack. Per-milestone notes above detail what each could not execute
+locally.
 
 ## Milestone 9 — Manual entity resolution ✅
 
