@@ -1,0 +1,38 @@
+{
+  "name": "@bai/collector-worker",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Local, user-operated browser collection worker. Runs on the operator's own machine in a VISIBLE browser, claims collection jobs from BAI, and STOPS for manual intervention on any login/CAPTCHA/blocking page. Live collection is gated behind a disabled feature flag.",
+  "type": "module",
+  "bin": {
+    "bai-collector": "dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsup",
+    "start": "node dist/index.js",
+    "collector": "tsx src/index.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:db": "echo \"@bai/collector-worker: no database integration tests\" && exit 0",
+    "clean": "rm -rf dist .turbo coverage *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@bai/collector-core": "workspace:*",
+    "@bai/db": "workspace:*",
+    "@bai/domain": "workspace:*",
+    "postgres": "3.4.9",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@bai/config": "workspace:*",
+    "@types/node": "22.20.1",
+    "eslint": "9.39.5",
+    "playwright": "1.56.1",
+    "tsup": "8.5.1",
+    "tsx": "4.23.1",
+    "typescript": "5.9.3",
+    "vitest": "3.2.7"
+  }
+}

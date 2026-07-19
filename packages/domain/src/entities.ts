@@ -1,11 +1,17 @@
 import type {
   AccessLevel,
+  CollectionJobState,
+  CollectionMode,
   Confidence,
   DatasetStatus,
   EventType,
   LifecycleStatus,
+  ListingVerificationStatus,
+  ManualActionReason,
   MemberRole,
   ObservationStatus,
+  SearchCellStatus,
+  SnapshotQualityStatus,
 } from "./enums";
 
 /**
@@ -157,4 +163,109 @@ export interface DatasetOverview {
   suspectedInactive: number;
   confirmedInactive: number;
   events: number;
+}
+
+/**
+ * Browser-operated collection entity shapes (Milestone 11). The database row
+ * types live in `@bai/db`; these are the domain-level representations shared by
+ * the web app and the local collector worker.
+ */
+export interface CollectionJobSummary {
+  id: string;
+  datasetId: string;
+  source: string;
+  market: string;
+  mode: CollectionMode;
+  state: CollectionJobState;
+  headed: boolean;
+  collectDetails: boolean;
+  maxListings: number | null;
+  minRating: number | null;
+  minReviewCount: number | null;
+  requestedStartAt: string | null;
+  manualActionReason: ManualActionReason | null;
+  manualActionDetail: string | null;
+  createdAt: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+  lastHeartbeatAt: string | null;
+}
+
+export interface CollectionJobMetrics {
+  plannedCells: number;
+  completedCells: number;
+  cardsDiscovered: number;
+  uniqueListings: number;
+  duplicateDiscoveries: number;
+  detailPagesCompleted: number;
+  warnings: number;
+  errors: number;
+  currentArea: string | null;
+  currentCell: string | null;
+}
+
+export interface CollectionJobDetail
+  extends CollectionJobSummary, CollectionJobMetrics {
+  selectedAreas: string[];
+}
+
+export interface SearchCellSummary {
+  id: string;
+  collectionId: string;
+  parentArea: string;
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+  zoom: number;
+  status: SearchCellStatus;
+  listingsDiscovered: number;
+  startedAt: string | null;
+  completedAt: string | null;
+}
+
+export interface CollectionObservationSummary {
+  id: string;
+  collectionId: string;
+  source: string;
+  sourceListingId: string;
+  sourceUrl: string | null;
+  title: string | null;
+  area: string | null;
+  rating: number | null;
+  reviewCount: number | null;
+  displayedPrice: string | null;
+  currency: string | null;
+  guestCapacity: number | null;
+  bedrooms: number | null;
+  latitude: number | null;
+  longitude: number | null;
+  detailCollected: boolean;
+  observedAt: string;
+}
+
+export interface MarketSnapshotSummary {
+  id: string;
+  datasetId: string;
+  collectionId: string | null;
+  source: string;
+  market: string;
+  observationStartedAt: string | null;
+  observationCompletedAt: string | null;
+  uniqueListingCount: number;
+  searchCellCoverage: number;
+  completionPercentage: number;
+  qualityStatus: SnapshotQualityStatus;
+  warningCount: number;
+  checksum: string;
+  createdAt: string;
+}
+
+export interface ListingVerificationSummary {
+  id: string;
+  collectionId: string;
+  sourceListingId: string;
+  sourceUrl: string | null;
+  status: ListingVerificationStatus;
+  observedAt: string;
 }

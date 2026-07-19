@@ -14,9 +14,11 @@ describe("source compliance gate", () => {
   beforeAll(async () => {
     ctx = await createTestDatabase();
     await ctx.actAsSuperuser();
+    // Distinct keys: 'airbnb' itself is seeded (disabled) by the browser-
+    // collection migration; this gate test just needs any disabled/pending source.
     await ctx.db.exec(`
       insert into private.data_sources (id, key, display_name, access_mode, compliance_status, automation_allowed)
-      values ('${disabledSource}', 'airbnb', 'Airbnb', 'browser_automation', 'disabled', false),
+      values ('${disabledSource}', 'airbnb_gate_test', 'Airbnb (gate test)', 'browser_automation', 'disabled', false),
              ('${pendingSource}', 'booking', 'Booking', 'licensed_api', 'pending_review', false);
     `);
   });

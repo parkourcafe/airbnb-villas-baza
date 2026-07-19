@@ -168,3 +168,108 @@ export const JOB_TYPE = [
   "maintenance",
 ] as const;
 export type JobType = (typeof JOB_TYPE)[number];
+
+/**
+ * Browser-operated collection (Milestone 11). A user starts a collection job
+ * from the dashboard; a local worker on their own machine claims and runs it in
+ * a visible browser. The worker STOPS on any login/CAPTCHA/blocking page and
+ * surfaces `manual_action_required` — it never attempts to defeat a source's
+ * security controls.
+ */
+export const COLLECTION_JOB_STATE = [
+  "draft",
+  "queued",
+  "claimed",
+  "running",
+  "manual_action_required",
+  "paused",
+  "completing",
+  "completed",
+  "partial",
+  "failed",
+  "cancelled",
+] as const;
+export type CollectionJobState = (typeof COLLECTION_JOB_STATE)[number];
+
+/** Terminal states after which a collection job does no further work. */
+export const COLLECTION_TERMINAL_STATES: readonly CollectionJobState[] = [
+  "completed",
+  "partial",
+  "failed",
+  "cancelled",
+];
+
+export const COLLECTION_MODE = [
+  "search_results_only",
+  "search_and_details",
+  "verify_existing_listings",
+] as const;
+export type CollectionMode = (typeof COLLECTION_MODE)[number];
+
+export const SEARCH_CELL_STATUS = [
+  "pending",
+  "running",
+  "completed",
+  "manual_action_required",
+  "failed",
+  "skipped",
+] as const;
+export type SearchCellStatus = (typeof SEARCH_CELL_STATUS)[number];
+
+/**
+ * Why a collection stopped and asked the operator to intervene. The collector
+ * never bypasses these — it surfaces the reason and waits for a human.
+ */
+export const MANUAL_ACTION_REASON = [
+  "captcha",
+  "login_challenge",
+  "account_verification",
+  "access_denied",
+  "blocking_page",
+  "navigation_failure",
+] as const;
+export type ManualActionReason = (typeof MANUAL_ACTION_REASON)[number];
+
+/**
+ * Quality of a finalized market snapshot. A `degraded` snapshot must never be
+ * compared automatically without explicit user confirmation.
+ */
+export const SNAPSHOT_QUALITY_STATUS = [
+  "complete",
+  "partial",
+  "degraded",
+  "failed",
+] as const;
+export type SnapshotQualityStatus = (typeof SNAPSHOT_QUALITY_STATUS)[number];
+
+/**
+ * Per-listing verification outcome for `verify_existing_listings`. One failed
+ * observation (login_required/blocked/source_error/unknown) must never, on its
+ * own, be interpreted as a removed listing.
+ */
+export const LISTING_VERIFICATION_STATUS = [
+  "active",
+  "unavailable",
+  "not_found",
+  "login_required",
+  "blocked",
+  "source_error",
+  "unknown",
+] as const;
+export type ListingVerificationStatus =
+  (typeof LISTING_VERIFICATION_STATUS)[number];
+
+/** Verification outcomes that are NOT evidence a listing is gone. */
+export const VERIFICATION_INCONCLUSIVE_STATUSES: readonly ListingVerificationStatus[] =
+  ["login_required", "blocked", "source_error", "unknown"];
+
+/** Observed status of a single detail-enrichment page fetch. */
+export const DETAIL_OBSERVED_STATUS = [
+  "collected",
+  "unavailable",
+  "not_found",
+  "blocked",
+  "error",
+  "skipped",
+] as const;
+export type DetailObservedStatus = (typeof DETAIL_OBSERVED_STATUS)[number];
