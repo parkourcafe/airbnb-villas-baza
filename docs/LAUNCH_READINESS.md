@@ -6,12 +6,12 @@ detail), `SECURITY_CHECKLIST.md`, and `RUNBOOK.md`.
 
 ## Scorecard
 
-| Dimension                                             | Score  |
-| ----------------------------------------------------- | ------ |
-| Functional coverage of the spec (is it written?)      | ~90/100 |
-| Verification (is it proven to work?)                  | ~55/100 |
-| Production readiness (can real users use it?)         | ~35/100 |
-| **Overall readiness for a full launch**               | **~65/100** |
+| Dimension                                        | Score       |
+| ------------------------------------------------ | ----------- |
+| Functional coverage of the spec (is it written?) | ~90/100     |
+| Verification (is it proven to work?)             | ~55/100     |
+| Production readiness (can real users use it?)    | ~35/100     |
+| **Overall readiness for a full launch**          | **~65/100** |
 
 The gap between 90 and 65 has one root cause: **nothing has ever run against a
 real Supabase / Postgres / Storage / GoTrue.** All verification is PGlite (WASM
@@ -31,14 +31,14 @@ unauthenticated paths only.
 
 ## Written but NOT verified live (and why)
 
-| Area                                              | Why not verified                              |
-| ------------------------------------------------- | --------------------------------------------- |
-| CSV → worker → snapshots → events → dashboard     | No live Postgres/worker here (no Docker/CLI)  |
-| Login via real GoTrue, authenticated screens      | No running Supabase Auth                       |
-| Storage: import/report upload/download, signed URL | No Storage backend                            |
-| PostGIS geography + spatial queries               | PGlite has no PostGIS (DDL preprocessed)      |
-| Live adapter / cron scheduler run                 | Needs worker + DB                              |
-| `database.types.ts`                               | Hand-authored, not `supabase gen types` — drift risk |
+| Area                                               | Why not verified                                     |
+| -------------------------------------------------- | ---------------------------------------------------- |
+| CSV → worker → snapshots → events → dashboard      | No live Postgres/worker here (no Docker/CLI)         |
+| Login via real GoTrue, authenticated screens       | No running Supabase Auth                             |
+| Storage: import/report upload/download, signed URL | No Storage backend                                   |
+| PostGIS geography + spatial queries                | PGlite has no PostGIS (DDL preprocessed)             |
+| Live adapter / cron scheduler run                  | Needs worker + DB                                    |
+| `database.types.ts`                                | Hand-authored, not `supabase gen types` — drift risk |
 
 ---
 
