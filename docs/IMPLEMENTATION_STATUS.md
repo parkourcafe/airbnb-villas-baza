@@ -5,9 +5,36 @@ This document tracks milestone progress for Bali Accommodation Intelligence
 
 ## Current state
 
-- **Completed:** Milestone 0 (foundation) · Milestone 1 (Supabase schema, auth, tenancy)
-- **Next milestone:** Milestone 2 — Core data schema and fixture catalogue (not started)
+- **Completed:** Milestone 0 (foundation) · Milestone 1 (Supabase schema, auth, tenancy) · Milestone 2 (core data schema + fixture catalogue)
+- **Next milestone:** Milestone 3 — CSV import workflow (not started)
 - **Runtime:** Node.js 24 LTS · pnpm · Turborepo · Next.js 16 App Router · TypeScript strict
+
+## Milestone 2 — Core data schema and fixture catalogue ✅
+
+| Area                     | Status | Notes                                                                                                                                                                                                                     |
+| ------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Core schema migration    | ✅     | regions, properties, aliases, source_listings, listing_snapshots, snapshot_diffs, events, event_evidence, audit_logs (public) + data_sources, parser_versions, collection_runs/jobs, job_logs, raw_observations (private) |
+| Enums (app)              | ✅     | observation/lifecycle/confidence/source-access/source-compliance/run/job/event types                                                                                                                                      |
+| PostGIS + numeric coords | ✅     | spec `geography` columns + GiST; app/tests read denormalized `latitude`/`longitude numeric`                                                                                                                               |
+| RLS + grants             | ✅     | dataset-scoped SELECT; `regions` shared; evidence scoped via event; **append-only** (no client write grants); private tables ungranted                                                                                    |
+| Seed fixtures (demo)     | ✅     | Bali regions, 5 sources (approved/disabled/pending), 20 properties, 25 listings, 25 snapshots, 5 events + evidence — idempotent, demo-marked                                                                              |
+| Typed repositories       | ✅     | listProperties/getProperty/listSourceListings/listListingSnapshots/listEvents/getEventEvidence/getDatasetOverview/listRegions — keyset pagination, no N+1                                                                 |
+| Catalogue UI             | ✅     | Overview KPIs, Properties table (region/status filters + keyset), Property detail tabs, Events + evidence drawer, Map (MapLibre gated on `MAP_STYLE_URL` + accessible list)                                               |
+| RLS tests                | ✅     | 8 executed catalogue tests (20 total with tenancy)                                                                                                                                                                        |
+| Unit tests               | ✅     | coordinate-precision rounding in `@bai/domain`                                                                                                                                                                            |
+
+### Verification note (Milestone 2)
+
+The new migration is executed in **PGlite** with its PostGIS DDL stripped (extension,
+`geography` columns → `text`, GiST indexes dropped) — RLS never references geo columns,
+so dataset-scoping/isolation/append-only/private-invisibility are all asserted against
+the real policies. The `seed.sql` catalogue block was executed against the migrated
+schema in PGlite to confirm it is valid and produces the expected row counts (20/25/25/5).
+
+Could **not** be executed here (needs Docker/Supabase): the live PostGIS `geography`
+columns and spatial queries (the demo seed leaves `location` null; the app reads numeric
+lat/lng), and browsing the catalogue against a running Data API. The keyset `.or()`
+cursor clauses and the `regions(name)` embed are exercised only against a live PostgREST.
 
 ## Milestone 1 — Local Supabase, auth and tenancy ✅
 

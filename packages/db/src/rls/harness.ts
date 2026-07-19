@@ -47,8 +47,26 @@ export const TENANCY_IDS = {
   datasetB: "00000000-0000-0000-0000-0000000c0002",
   // datasetC is owned by org1 but has no access grant yet.
   datasetC: "00000000-0000-0000-0000-0000000c0003",
+  // Catalogue fixtures (Milestone 2).
+  region1: "00000000-0000-0000-0000-0000000d0001",
+  source1: "00000000-0000-0000-0000-0000000d0002",
+  runA: "00000000-0000-0000-0000-0000000d0003",
+  propertyA1: "00000000-0000-0000-0000-0000000e0001",
+  propertyA2: "00000000-0000-0000-0000-0000000e0002",
+  propertyB1: "00000000-0000-0000-0000-0000000e0003",
+  listingA1: "00000000-0000-0000-0000-0000000f0001",
+  snapshotA1: "00000000-0000-0000-0000-0000000f0002",
+  eventA1: "00000000-0000-0000-0000-0000000f0003",
+  evidenceA1: "00000000-0000-0000-0000-000000100001",
 } as const;
 
+/**
+ * Read all migrations and preprocess the DDL that PGlite cannot run. This only
+ * removes extensions/types/indexes the RLS policies never reference:
+ * - `pgcrypto` (only the seed's crypt() needs it; gen_random_uuid is built-in);
+ * - `postgis` + `geography(...)` columns + GiST spatial indexes (PGlite has no
+ *   PostGIS; the app/tests read the denormalized numeric lat/lng columns).
+ */
 function readMigrations(): string {
   const files = readdirSync(migrationsDir)
     .filter((name) => name.endsWith(".sql"))
@@ -59,6 +77,15 @@ function readMigrations(): string {
     .replace(
       /create extension if not exists pgcrypto[^;]*;/gi,
       "-- pgcrypto omitted (not needed for schema/RLS tests)",
+    )
+    .replace(
+      /create extension if not exists postgis[^;]*;/gi,
+      "-- postgis omitted (PGlite has no PostGIS; geo columns become text)",
+    )
+    .replace(/geography\([^)]*\)/gi, "text")
+    .replace(
+      /create index[^;]*using gist[^;]*;/gi,
+      "-- gist spatial index omitted (no PostGIS in PGlite)",
     );
 }
 
@@ -149,5 +176,40 @@ async function seed(db: PGlite): Promise<void> {
     insert into public.organization_dataset_access (organization_id, dataset_id, access_level) values
       ('${i.org1}', '${i.datasetA}', 'manage'),
       ('${i.org2}', '${i.datasetB}', 'read');
+  `);
+
+  // Catalogue fixtures (geography columns are text in the harness; only the
+  // numeric lat/lng and the non-geo columns are populated).
+  await db.exec(`
+    insert into public.regions (id, name, slug, region_type) values
+      ('${i.region1}', 'Canggu', 'canggu', 'area');
+
+    insert into private.data_sources (id, key, display_name, access_mode, compliance_status, automation_allowed, capabilities) values
+      ('${i.source1}', 'demo_fixture', 'Demo Fixture', 'demo_fixture', 'approved', true, '{listing_identity,listing_status}');
+
+    insert into private.collection_runs (id, dataset_id, source_id, run_kind, status, parser_version) values
+      ('${i.runA}', '${i.datasetA}', '${i.source1}', 'import', 'completed', 'demo-1');
+
+    insert into public.properties
+      (id, dataset_id, canonical_name, primary_region_id, latitude, longitude, current_lifecycle_status, current_confidence, first_observed_at, last_observed_at) values
+      ('${i.propertyA1}', '${i.datasetA}', 'Villa Aruna', '${i.region1}', -8.6478, 115.1385, 'active', 'high', '2026-07-18T00:00:00Z', '2026-07-20T00:00:00Z'),
+      ('${i.propertyA2}', '${i.datasetA}', 'Villa Sora', '${i.region1}', -8.8291, 115.0849, 'suspected_inactive', 'medium', '2026-07-18T00:00:00Z', '2026-07-22T00:00:00Z'),
+      ('${i.propertyB1}', '${i.datasetB}', 'Villa Other', '${i.region1}', -8.7000, 115.2000, 'active', 'high', '2026-07-18T00:00:00Z', '2026-07-20T00:00:00Z');
+
+    insert into public.source_listings
+      (id, dataset_id, property_id, source_id, external_id, current_observation_status, current_lifecycle_status, first_seen_at, last_observed_at) values
+      ('${i.listingA1}', '${i.datasetA}', '${i.propertyA1}', '${i.source1}', 'demo-001', 'active', 'active', '2026-07-18T00:00:00Z', '2026-07-20T00:00:00Z');
+
+    insert into public.listing_snapshots
+      (id, dataset_id, source_listing_id, collection_run_id, observed_at, observation_status, rating, review_count, content_fingerprint, parser_version, field_presence) values
+      ('${i.snapshotA1}', '${i.datasetA}', '${i.listingA1}', '${i.runA}', '2026-07-20T00:00:00Z', 'active', 4.92, 184, 'fp-demo-001', 'demo-1', '{"rating":true}');
+
+    insert into public.events
+      (id, dataset_id, property_id, source_listing_id, event_type, event_at, confidence, title, deduplication_key) values
+      ('${i.eventA1}', '${i.datasetA}', '${i.propertyA1}', '${i.listingA1}', 'listing_created', '2026-07-18T00:00:00Z', 'high', 'Listing first observed', 'dedup-a1');
+
+    insert into public.event_evidence
+      (id, event_id, current_snapshot_id, evidence_type, explanation) values
+      ('${i.evidenceA1}', '${i.eventA1}', '${i.snapshotA1}', 'snapshot', 'First observation snapshot for this listing.');
   `);
 }

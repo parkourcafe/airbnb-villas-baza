@@ -11,3 +11,4 @@ export * from "./schemas";
 export * from "./authz";
 export * from "./redirect";
 export * from "./entities";
+export * from "./geo";

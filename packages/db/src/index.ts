@@ -11,4 +11,5 @@ export * from "./pagination";
 export * from "./env";
 export * from "./clients/service";
 export * from "./repositories/tenancy";
+export * from "./repositories/catalogue";
 export type { Database, Json } from "./generated/database.types";

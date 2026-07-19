@@ -134,3 +134,37 @@ export const DATA_QUALITY_FLAG = [
   "entity_resolution_conflict",
 ] as const;
 export type DataQualityFlag = (typeof DATA_QUALITY_FLAG)[number];
+
+export const COLLECTION_RUN_STATUS = [
+  "pending",
+  "queued",
+  "running",
+  "completed",
+  "completed_with_errors",
+  "degraded",
+  "failed",
+  "cancelled",
+] as const;
+export type CollectionRunStatus = (typeof COLLECTION_RUN_STATUS)[number];
+
+export const JOB_STATUS = [
+  "queued",
+  "running",
+  "retry_wait",
+  "succeeded",
+  "failed",
+  "cancelled",
+] as const;
+export type JobStatus = (typeof JOB_STATUS)[number];
+
+export const JOB_TYPE = [
+  "import",
+  "collect",
+  "normalize",
+  "compare",
+  "report",
+  "export",
+  "notify",
+  "maintenance",
+] as const;
+export type JobType = (typeof JOB_TYPE)[number];

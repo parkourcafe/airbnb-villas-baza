@@ -7,6 +7,7 @@ import { cn } from "@bai/ui";
 const NAV = [
   { href: "/app/overview", label: "Overview" },
   { href: "/app/properties", label: "Properties" },
+  { href: "/app/map", label: "Map" },
   { href: "/app/events", label: "Events" },
   { href: "/app/imports", label: "Imports" },
   { href: "/app/watchlists", label: "Watchlists" },
