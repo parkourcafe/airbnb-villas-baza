@@ -10,6 +10,6 @@ import { baseConfig } from "@bai/config/eslint/base";
 export default [
   ...baseConfig,
   {
-    ignores: ["apps/**", "packages/**", "bai_codex_spec/**"],
+    ignores: ["apps/**", "packages/**", "docs/**"],
   },
 ];

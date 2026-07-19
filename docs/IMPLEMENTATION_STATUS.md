@@ -46,5 +46,5 @@ report that database tests arrive later.
 
 ## Later milestones
 
-Milestones 1–10 are defined in `bai_codex_spec/05_CODEX_IMPLEMENTATION_PLAN.md`
+Milestones 1–10 are defined in `docs/bai_codex_spec/05_CODEX_IMPLEMENTATION_PLAN.md`
 and have not been started.

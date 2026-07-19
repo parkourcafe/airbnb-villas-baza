@@ -5,10 +5,12 @@
 @layer base {
   :root {
     /* Font fallback strategy: system stack, no bundled/remote font fetch. */
-    --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-      Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas,
-      "Liberation Mono", monospace;
+    --font-sans:
+      ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
+      Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+    --font-mono:
+      ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono",
+      monospace;
   }
 
   * {

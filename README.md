@@ -63,7 +63,7 @@ packages/
 docs/
   IMPLEMENTATION_STATUS.md
   adr/             Architecture Decision Records
-bai_codex_spec/    The BAI specification bundle (reference)
+  bai_codex_spec/  The BAI specification bundle (reference)
 ```
 
 ## Principles

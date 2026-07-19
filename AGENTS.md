@@ -2,16 +2,17 @@
 
 This repository implements Bali Accommodation Intelligence (BAI).
 
-Read these files before changing code:
+Read these files before changing code (the specification bundle lives in
+`docs/bai_codex_spec/`):
 
-1. `00_READ_ME_FIRST.md`
-2. `01_PRODUCT_AND_SITE_ARCHITECTURE.md`
-3. `02_SYSTEM_ARCHITECTURE.md`
-4. `03_DATABASE_SCHEMA.md`
-5. `04_EVENT_AND_REMOVAL_ENGINE.md`
-6. `05_CODEX_IMPLEMENTATION_PLAN.md`
-7. `06_ACCEPTANCE_TESTS.md`
-8. `07_SOURCE_COMPLIANCE.md`
+1. `docs/bai_codex_spec/00_READ_ME_FIRST.md`
+2. `docs/bai_codex_spec/01_PRODUCT_AND_SITE_ARCHITECTURE.md`
+3. `docs/bai_codex_spec/02_SYSTEM_ARCHITECTURE.md`
+4. `docs/bai_codex_spec/03_DATABASE_SCHEMA.md`
+5. `docs/bai_codex_spec/04_EVENT_AND_REMOVAL_ENGINE.md`
+6. `docs/bai_codex_spec/05_CODEX_IMPLEMENTATION_PLAN.md`
+7. `docs/bai_codex_spec/06_ACCEPTANCE_TESTS.md`
+8. `docs/bai_codex_spec/07_SOURCE_COMPLIANCE.md`
 
 ## Operating rules
 
