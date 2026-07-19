@@ -74,6 +74,14 @@ export default async function PropertiesPage({
       <PageHeader
         title="Properties"
         description={`Canonical accommodation records in ${dataset.name}.`}
+        actions={
+          <a
+            href={`/api/properties/export?${new URLSearchParams(baseQuery).toString()}`}
+            className="inline-flex h-9 items-center rounded-md border border-input px-3 text-sm hover:bg-accent"
+          >
+            Export CSV
+          </a>
+        }
       />
 
       <form

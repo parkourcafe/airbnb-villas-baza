@@ -15,7 +15,8 @@ import {
 } from "./jobs/queue";
 import { runImportJob } from "./jobs/import-runner";
 import { runCollectJob } from "./jobs/collect-runner";
-import { createCsvLoader } from "./storage";
+import { runReportJob } from "./jobs/report-runner";
+import { createCsvLoader, createCsvUploader } from "./storage";
 
 /**
  * The adapters this worker can run. The `airbnb` source is intentionally never
@@ -63,21 +64,31 @@ export async function runWorker(
   return 0;
 }
 
+interface JobDeps {
+  loadCsv?: (path: string) => Promise<string>;
+  uploadCsv?: (path: string, content: string) => Promise<void>;
+  registry: SourceRegistry;
+}
+
 async function handleJob(
   sql: Sql,
-  loadCsv: ((path: string) => Promise<string>) | undefined,
-  registry: SourceRegistry,
+  deps: JobDeps,
   job: CollectionJob,
 ): Promise<void> {
   logger.info("job.claimed", { jobId: job.id, type: job.job_type });
   try {
     if (job.job_type === "import") {
-      if (!loadCsv) {
+      if (!deps.loadCsv) {
         throw new Error("import job requires storage configuration");
       }
-      await runImportJob({ sql, loadCsv }, job);
+      await runImportJob({ sql, loadCsv: deps.loadCsv }, job);
     } else if (job.job_type === "collect") {
-      await runCollectJob({ sql, registry }, job);
+      await runCollectJob({ sql, registry: deps.registry }, job);
+    } else if (job.job_type === "report") {
+      if (!deps.uploadCsv) {
+        throw new Error("report job requires storage configuration");
+      }
+      await runReportJob({ sql, uploadCsv: deps.uploadCsv }, job);
     } else {
       logger.warn("job.unsupported", { jobId: job.id, type: job.job_type });
     }
@@ -95,11 +106,16 @@ function runPollLoop(config: WorkerConfig): Promise<void> {
     const sql: Sql | undefined = canProcessJobs(config)
       ? getSql(config.databaseUrl as string)
       : undefined;
-    const loadCsv =
-      config.supabaseUrl && config.serviceRoleKey
-        ? createCsvLoader(config.supabaseUrl, config.serviceRoleKey)
-        : undefined;
-    const registry = buildRegistry();
+    const hasStorage = Boolean(config.supabaseUrl && config.serviceRoleKey);
+    const jobDeps: JobDeps = {
+      loadCsv: hasStorage
+        ? createCsvLoader(config.supabaseUrl as string, config.serviceRoleKey as string)
+        : undefined,
+      uploadCsv: hasStorage
+        ? createCsvUploader(config.supabaseUrl as string, config.serviceRoleKey as string)
+        : undefined,
+      registry: buildRegistry(),
+    };
 
     const tick = async () => {
       if (stopping || ticking) return;
@@ -112,7 +128,7 @@ function runPollLoop(config: WorkerConfig): Promise<void> {
         await recoverStaleJobs(sql);
         const job = await claimJob(sql, config.workerId);
         if (job) {
-          await handleJob(sql, loadCsv, registry, job);
+          await handleJob(sql, jobDeps, job);
         }
       } catch (error) {
         logger.error("worker.tick.error", { message: errorMessage(error) });

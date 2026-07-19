@@ -9,6 +9,23 @@ This document tracks milestone progress for Bali Accommodation Intelligence
 - **Runtime:** Node.js 24 LTS · pnpm · Turborepo · Next.js 16 App Router · TypeScript strict
 - **Gates:** `lint · typecheck · test · test:db · build · test:e2e` all green.
 
+## Post-MVP follow-ups ✅
+
+Deferred items from the milestone scope notes, now implemented:
+
+| Item                          | Milestone | Notes                                                                                                                     |
+| ----------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Compare view                  | 6.6       | `/app/compare` shows a snapshot's field diffs vs its previous comparable; `listSnapshotDiffs`; reachable per source listing |
+| CSV export of selection       | 6.2       | `GET /api/properties/export` — synchronous, RLS-scoped, filters recorded in headers, injection-safe, 10k sync cap (else 413) |
+| Map clustering + layers       | 6.4       | MapLibre GeoJSON clustering, cluster counts, lifecycle-coloured unclustered points, click popups                          |
+| Property split + rollback     | 9         | `split_listing` / `rollback_merge` RPCs (admin-gated, audited, snapshots preserved); redirect record carries moved set    |
+| Source admin UI               | 8.6       | `public.source_catalog` safe view + Sources page (compliance/capabilities/review dates) with admin schedule form          |
+| Scheduled collection enqueue  | 8.5       | `collection_schedules` + service-role `enqueue_due_collections()`; cron endpoint enqueues due, approved, automatable sources |
+| Async reports + signed download | 7.3     | report-insert trigger → `report` job; worker `report-runner` generates CSV, uploads to the `reports` bucket, marks ready + expiry; `GET /api/reports/:id/download` mints a short-lived signed URL |
+| Async export threshold        | 7.4       | property export caps sync at 10k rows and signals when an async export is required; report/export share the async pipeline |
+
+New tests: split/rollback + scheduling + report-enqueue in PGlite (**51 DB tests**); Compare/export/map/report-download verified by typecheck + build. Storage upload/download and the live worker report run remain CI/production-only (no Storage here), consistent with the import pipeline's caveat.
+
 ## Milestone 10 — Security, performance and launch hardening ✅
 
 | Area                       | Status | Notes                                                                                                                          |

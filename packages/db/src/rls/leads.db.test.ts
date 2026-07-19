@@ -63,6 +63,15 @@ describe("watchlists, leads and reports", () => {
     expect(rows.rows).toHaveLength(1);
   });
 
+  it("enqueues a report generation job when a report is created", async () => {
+    await ctx.actAsSuperuser();
+    const jobs = await ctx.db.query(
+      `select id from private.collection_jobs
+       where job_type = 'report' and payload->>'report_id' = '00000000-0000-0000-0000-0000000cc003'`,
+    );
+    expect(jobs.rows).toHaveLength(1);
+  });
+
   it("enforces immutable report parameters (reproducibility)", async () => {
     await ctx.actAs(ctx.ids.owner1);
     // Non-parameter columns can change...

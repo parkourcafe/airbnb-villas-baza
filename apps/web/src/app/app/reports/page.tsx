@@ -125,7 +125,17 @@ export default async function ReportsPage() {
                   <TableCell>
                     <Badge variant="outline">{report.status}</Badge>
                   </TableCell>
-                  <TableCell>{formatDate(report.createdAt)}</TableCell>
+                  <TableCell>
+                    {formatDate(report.createdAt)}
+                    {report.status === "ready" ? (
+                      <a
+                        href={`/api/reports/${report.id}/download`}
+                        className="ml-3 text-sm underline-offset-2 hover:underline"
+                      >
+                        Download CSV
+                      </a>
+                    ) : null}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
