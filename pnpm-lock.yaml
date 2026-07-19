@@ -330,6 +330,12 @@ importers:
       '@bai/domain':
         specifier: workspace:*
         version: link:../domain
+      '@bai/import-engine':
+        specifier: workspace:*
+        version: link:../import-engine
+      '@bai/snapshot-engine':
+        specifier: workspace:*
+        version: link:../snapshot-engine
     devDependencies:
       '@bai/config':
         specifier: workspace:*

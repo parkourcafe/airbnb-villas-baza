@@ -5,9 +5,26 @@ This document tracks milestone progress for Bali Accommodation Intelligence
 
 ## Current state
 
-- **Completed:** Milestones 0–7 (… dashboard review · watchlists/leads/reports)
-- **Next milestone:** Milestone 8 — Source Adapter SDK and worker scheduling
+- **Completed:** Milestones 0–8 (… watchlists/leads/reports · source SDK & scheduling)
+- **Next milestone:** Milestone 9 — Manual entity resolution
 - **Runtime:** Node.js 24 LTS · pnpm · Turborepo · Next.js 16 App Router · TypeScript strict
+
+## Milestone 8 — Source Adapter SDK and worker scheduling ✅
+
+| Area                    | Status | Notes                                                                                                                                                              |
+| ----------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Source SDK (8.1)        | ✅     | adapter contract + compliance gate (existing) extended with `validateCapabilities` / `validateRequiredConfig`; parser version + rate/health surfaced             |
+| Fixture adapter (8.2)   | ✅     | `FixtureSourceAdapter` reads controlled in-memory fixtures, simulates active/not_found/source_error, self-guards via the gate; contract tests                     |
+| Manual CSV adapter (8.3)| ✅     | `CsvSourceAdapter` wraps the import-engine parser under adapter conventions; `automation_allowed: false` (a reviewed human action)                                 |
+| Worker (8.4)            | ✅     | polling · bounded concurrency · graceful shutdown · heartbeat · retry · stale-job recovery (M3) + a `collect` runner that gates → collects → persists (M4/M5)      |
+| Cron (8.5)              | ✅     | protected `POST /api/cron`; `CRON_SECRET` constant-time check, **fail-closed** when unset, 401 on missing/wrong secret, 405 on GET                                 |
+| Compliance enforcement  | ✅     | DB trigger rejects a collection run for any non-approved source (even a hand-inserted one); the worker gate blocks disabled/pending/automation-forbidden at runtime |
+| Prohibition (8.7)       | ✅     | no live Airbnb/Booking/Agoda collector; `airbnb` stays seeded disabled and is never registered with automation                                                     |
+| Tests                   | ✅     | 13 SDK contract tests; 3 PGlite compliance-gate tests; 3 cron 401/405 e2e; JOB-01 double-claim + stale-recovery (M3)                                              |
+
+**Acceptance (M8):** disabled source cannot run even if a job is inserted ✓ · pending source cannot run ✓ · approved fixture source runs (adapter contract + collect runner) ✓ · unauthorized cron → 401 ✓ · two workers do not claim the same job ✓ (`claim_collection_job`, JOB-01) · stale job recovers ✓.
+
+**Scope note:** the Source admin UI (8.6) and scheduled cron enqueue are staged as a thin follow-up — source metadata lives in the `private` schema (off the Data API) and is read through a server-only admin repository, aligned with the M10 security hardening. The `collect` runner reuses the exact M4/M5 persistence, so an approved fixture run produces the same snapshots/diffs/events as an import.
 
 ## Milestone 7 — Watchlists, leads and reports ✅
 

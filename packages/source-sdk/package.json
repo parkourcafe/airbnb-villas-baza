@@ -19,7 +19,9 @@
     "clean": "rm -rf .turbo coverage *.tsbuildinfo"
   },
   "dependencies": {
-    "@bai/domain": "workspace:*"
+    "@bai/domain": "workspace:*",
+    "@bai/import-engine": "workspace:*",
+    "@bai/snapshot-engine": "workspace:*"
   },
   "devDependencies": {
     "@bai/config": "workspace:*",

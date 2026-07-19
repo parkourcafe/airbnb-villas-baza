@@ -1,4 +1,9 @@
 import type { Sql } from "postgres";
+import {
+  CsvSourceAdapter,
+  FixtureSourceAdapter,
+  SourceRegistry,
+} from "@bai/source-sdk";
 import { canProcessJobs, loadWorkerConfig, type WorkerConfig } from "./config";
 import { logger } from "./observability/logger";
 import { closeSql, getSql } from "./db";
@@ -9,7 +14,19 @@ import {
   type CollectionJob,
 } from "./jobs/queue";
 import { runImportJob } from "./jobs/import-runner";
+import { runCollectJob } from "./jobs/collect-runner";
 import { createCsvLoader } from "./storage";
+
+/**
+ * The adapters this worker can run. The `airbnb` source is intentionally never
+ * registered with an automated collector in the MVP — it stays seeded disabled.
+ */
+function buildRegistry(): SourceRegistry {
+  const registry = new SourceRegistry();
+  registry.register(new FixtureSourceAdapter());
+  registry.register(new CsvSourceAdapter());
+  return registry;
+}
 
 export interface RunWorkerOptions {
   smoke?: boolean;
@@ -49,6 +66,7 @@ export async function runWorker(
 async function handleJob(
   sql: Sql,
   loadCsv: ((path: string) => Promise<string>) | undefined,
+  registry: SourceRegistry,
   job: CollectionJob,
 ): Promise<void> {
   logger.info("job.claimed", { jobId: job.id, type: job.job_type });
@@ -58,6 +76,8 @@ async function handleJob(
         throw new Error("import job requires storage configuration");
       }
       await runImportJob({ sql, loadCsv }, job);
+    } else if (job.job_type === "collect") {
+      await runCollectJob({ sql, registry }, job);
     } else {
       logger.warn("job.unsupported", { jobId: job.id, type: job.job_type });
     }
@@ -79,6 +99,7 @@ function runPollLoop(config: WorkerConfig): Promise<void> {
       config.supabaseUrl && config.serviceRoleKey
         ? createCsvLoader(config.supabaseUrl, config.serviceRoleKey)
         : undefined;
+    const registry = buildRegistry();
 
     const tick = async () => {
       if (stopping || ticking) return;
@@ -91,7 +112,7 @@ function runPollLoop(config: WorkerConfig): Promise<void> {
         await recoverStaleJobs(sql);
         const job = await claimJob(sql, config.workerId);
         if (job) {
-          await handleJob(sql, loadCsv, job);
+          await handleJob(sql, loadCsv, registry, job);
         }
       } catch (error) {
         logger.error("worker.tick.error", { message: errorMessage(error) });
