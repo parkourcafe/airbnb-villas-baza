@@ -19,6 +19,7 @@
     "@bai/db": "workspace:*",
     "@bai/domain": "workspace:*",
     "@bai/import-engine": "workspace:*",
+    "@bai/snapshot-engine": "workspace:*",
     "@bai/source-sdk": "workspace:*",
     "@supabase/supabase-js": "2.110.7",
     "postgres": "3.4.9",

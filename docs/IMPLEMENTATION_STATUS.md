@@ -5,9 +5,25 @@ This document tracks milestone progress for Bali Accommodation Intelligence
 
 ## Current state
 
-- **Completed:** Milestones 0–3 (foundation · auth/tenancy · core catalogue · CSV import)
-- **Next milestone:** Milestone 4 — Snapshot & diff engine (in progress)
+- **Completed:** Milestones 0–4 (foundation · auth/tenancy · core catalogue · CSV import · snapshot & diff engine)
+- **Next milestone:** Milestone 5 — Lifecycle & event engine
 - **Runtime:** Node.js 24 LTS · pnpm · Turborepo · Next.js 16 App Router · TypeScript strict
+
+## Milestone 4 — Snapshot & diff engine ✅
+
+| Area                                     | Status | Notes                                                                                                                                                                                                                                     |
+| ---------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Normalization (`@bai/snapshot-engine`)   | ✅     | Unicode/whitespace text, URL (tracking-param strip, port/slash/fragment/query canonicalization), boolean, number (thousands-sep), set (sorted/de-duped/lower-cased) + hashes, `setDelta`                                                  |
+| Snapshot builder                         | ✅     | `buildSnapshot`: title/description/photos/amenities hashes, time-independent `content_fingerprint`, `field_presence` (not-collected vs collected-null), `quality_flags`, rounded coords, `snapshot-normalizer:v1`                        |
+| Comparable-snapshot selection            | ✅     | `selectComparableSnapshot`: latest earlier · valid for field · parser-compatible · non-degraded · deterministic tie-break (04 §11)                                                                                                        |
+| Diff engine + versioned materiality      | ✅     | per-field-type diffs (scalar/money/boolean/hash/set/location); price ≥5% (same currency+unit only), rating ≥0.05, review-count increase-only; parser-mismatch suppression; `field-diff:v1` config; exact deltas stored                   |
+| Persistence wiring (worker)              | ✅     | import runner now upserts source listings (unique dataset+source+external), resolves canonical property (explicit key via alias, else new), inserts immutable snapshots (unique per listing/run), selects comparable, persists diffs      |
+| Engine tests                             | ✅     | 37 golden/unit tests (normalize, snapshot, diff, selection) — covers 04 scenarios 11/12/13 + idempotency + parser-version                                                                                                                |
+| DB tests                                 | ✅     | snapshot immutability, diff idempotency (unique key), dataset-scoped RLS, append-only enforcement (4 executed in PGlite; 28 total)                                                                                                        |
+
+**Acceptance (M4):** baseline→follow-up creates expected diffs ✓ · uncollected fields never diff ✓ · incompatible prices (currency/unit) not compared ✓ · repeated run creates no duplicate snapshots/diffs (unique constraints + deterministic keys) ✓ · parser version stored on every snapshot ✓.
+
+**Not executable here** (no Docker/Supabase/Storage): the live worker turning an uploaded CSV into snapshots against a running Postgres. The engine (pure) is fully unit-tested; the snapshot/diff **write path** (immutability, diff idempotency, RLS scoping, append-only) is executed against the real migration in PGlite. The TS orchestration in `snapshot-persistence.ts` (source-listing upsert + canonical property + comparable-selection SQL) is typechecked and mirrors the M3 runner pattern but is exercised end-to-end only where a live worker+DB is available.
 
 ## Milestone 3 — CSV import workflow ✅
 

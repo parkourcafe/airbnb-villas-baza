@@ -105,6 +105,9 @@ importers:
       '@bai/import-engine':
         specifier: workspace:*
         version: link:../../packages/import-engine
+      '@bai/snapshot-engine':
+        specifier: workspace:*
+        version: link:../../packages/snapshot-engine
       '@bai/source-sdk':
         specifier: workspace:*
         version: link:../../packages/source-sdk

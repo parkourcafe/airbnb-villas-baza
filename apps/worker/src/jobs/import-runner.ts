@@ -3,6 +3,13 @@ import type { Sql } from "postgres";
 import { runImport, type ImportValidationContext } from "@bai/import-engine";
 import { logger } from "../observability/logger";
 import type { CollectionJob } from "./queue";
+import {
+  persistAcceptedRow,
+  type SnapshotPersistCtx,
+} from "./snapshot-persistence";
+
+/** Parser version stamped on snapshots produced from a CSV import. */
+const IMPORT_PARSER_VERSION = "csv-import:v1";
 
 export interface ImportRunnerDeps {
   sql: Sql;
@@ -20,10 +27,10 @@ interface ImportRow {
 
 /**
  * Process one import job: validate the uploaded CSV with the import engine, then
- * persist rejections and raw-observation metadata and update the import metrics.
- * Turning accepted rows into source listings and immutable snapshots is the
- * snapshot engine's job (Milestone 4); this runner records the raw evidence and
- * result. Everything runs in a single transaction so re-processing is idempotent.
+ * persist rejections, raw-observation evidence and—via the snapshot engine
+ * (Milestone 4)—the source listings, immutable snapshots and field diffs for the
+ * accepted rows, and update the import metrics. Everything runs in a single
+ * transaction so re-processing is idempotent.
  */
 export async function runImportJob(
   deps: ImportRunnerDeps,
@@ -67,6 +74,12 @@ export async function runImportJob(
     }
 
     if (imp.collection_run_id) {
+      const persistCtx: SnapshotPersistCtx = {
+        datasetId: imp.dataset_id,
+        sourceId: imp.source_id,
+        runId: imp.collection_run_id,
+        parserVersion: IMPORT_PARSER_VERSION,
+      };
       for (const row of outcome.accepted) {
         const checksum = createHash("sha256")
           .update(JSON.stringify(row), "utf8")
@@ -79,6 +92,9 @@ export async function runImportJob(
              ${row.observationStatus}, ${checksum}, ${tx.json({ method: "manual_import" })})
           on conflict do nothing
         `;
+        // Turn the accepted row into an immutable snapshot + field diffs,
+        // upserting the source listing and canonical property (Milestone 4).
+        await persistAcceptedRow(tx, persistCtx, row);
       }
     }
 
