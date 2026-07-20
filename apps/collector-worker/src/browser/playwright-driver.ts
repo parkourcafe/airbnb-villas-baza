@@ -74,8 +74,16 @@ export class PlaywrightPageDriver implements PageDriver {
       `${this.baseUrl}/s/homes?search_by_map=true&ne_lat=${cell.north}` +
       `&ne_lng=${cell.east}&sw_lat=${cell.south}&sw_lng=${cell.west}&zoom=${cell.zoom}`;
     await page.goto(url, { waitUntil: "domcontentloaded" });
+    await this.waitForNetworkIdle(page);
     const state = await this.detectState(page);
     if (state !== "ok") return { state, cards: [], malformedCount: 0 };
+
+    // The listing cards render client-side after the network settles — give
+    // them a bounded chance to appear before reading. A page with genuinely
+    // no results still resolves quickly since we only wait, never retry.
+    await page
+      .waitForSelector('a[href*="/rooms/"]', { timeout: 8000 })
+      .catch(() => undefined);
 
     const raw = await page.$$eval('a[href*="/rooms/"]', (anchors) =>
       anchors.map((a) => ({
@@ -102,6 +110,9 @@ export class PlaywrightPageDriver implements PageDriver {
         emptyCard(id, absoluteUrl(this.baseUrl, item.href), item.label),
       );
     }
+    if (cards.length === 0) {
+      logger.warn("collector.search.no_cards_found", { url, cell: cell.parentArea });
+    }
     return { state: "ok", cards, malformedCount: malformed };
   }
 
@@ -114,6 +125,7 @@ export class PlaywrightPageDriver implements PageDriver {
       ? absoluteUrl(this.baseUrl, url)
       : `${this.baseUrl}/rooms/${listingId}`;
     await page.goto(target, { waitUntil: "domcontentloaded" });
+    await this.waitForNetworkIdle(page);
     const state = await this.detectState(page);
     if (state !== "ok") {
       return { state, detail: minimalDetail(listingId, stateToDetail(state)) };
@@ -143,6 +155,13 @@ export class PlaywrightPageDriver implements PageDriver {
     await this.browser?.close().catch(() => undefined);
     this.context = undefined;
     this.page = undefined;
+  }
+
+  /** Bounded wait for the network to settle after a navigation. */
+  private async waitForNetworkIdle(page: Page): Promise<void> {
+    await page
+      .waitForLoadState("networkidle", { timeout: 10000 })
+      .catch(() => undefined);
   }
 
   /**
