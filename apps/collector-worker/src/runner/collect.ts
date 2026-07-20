@@ -107,6 +107,15 @@ export async function runCollection(
 
   // 2. Search phase.
   await driver.launch();
+  // Keep the browser OPEN when we stop for manual intervention, so the
+  // operator can act in the same window instead of it vanishing on them. It is
+  // only closed on a clean finish or on a genuine unexpected error.
+  let driverClosed = false;
+  const closeDriver = async (): Promise<void> => {
+    if (driverClosed) return;
+    driverClosed = true;
+    await driver.close();
+  };
   try {
     for (const cell of cells) {
       if (cell.status === "completed" || cell.status === "skipped") continue;
@@ -237,7 +246,7 @@ export async function runCollection(
     }
 
     // 4. Finalize.
-    return await finalize(deps, collection, workerId, {
+    const outcome = await finalize(deps, collection, workerId, {
       startedAt,
       blocked,
       manualReason,
@@ -245,8 +254,20 @@ export async function runCollection(
       errors,
       detailPagesCompleted,
     });
-  } finally {
-    await driver.close();
+    if (outcome.blocked) {
+      logger.info("collect.browser.left_open", {
+        collection: collectionId,
+        reason: outcome.manualActionReason,
+      });
+    } else {
+      await closeDriver();
+    }
+    return outcome;
+  } catch (error) {
+    // A genuine unexpected error (not a handled blocking state) — don't leave
+    // an orphaned browser window behind.
+    await closeDriver();
+    throw error;
   }
 }
 

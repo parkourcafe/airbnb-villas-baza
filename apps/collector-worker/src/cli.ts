@@ -63,7 +63,15 @@ async function cmdLogin(config: CollectorConfig): Promise<number> {
   return 0;
 }
 
-async function runOne(
+/**
+ * Run one collection to completion, staying in this same process (and the same
+ * open browser window) across a manual-action pause. When the collector stops
+ * for a login/CAPTCHA/verification page, it waits right here for the operator
+ * to resolve it in the visible window, then automatically continues — instead
+ * of exiting and leaving them to re-run a separate `resume` command against a
+ * browser that's already gone.
+ */
+async function runOneInteractive(
   config: CollectorConfig,
   store: CollectorStore,
   collectionId: string,
@@ -75,10 +83,30 @@ async function runOne(
     driver: makeDriver(config),
     pacing: makePacing(config),
   };
-  if (collection.mode === "verify_existing_listings") {
-    await runVerification(deps, collectionId, config.workerId);
-  } else {
-    await runCollection(deps, collectionId, config.workerId);
+  const runOnce = () =>
+    collection.mode === "verify_existing_listings"
+      ? runVerification(deps, collectionId, config.workerId)
+      : runCollection(deps, collectionId, config.workerId);
+
+  for (;;) {
+    const result = await runOnce();
+    if (!result.blocked) return;
+
+    const reason = result.manualActionReason?.replace(/_/g, " ") ?? "a page";
+    const rl = createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+    logger.warn("collector.manual_action_required", {
+      collection: collectionId,
+      reason,
+    });
+    await rl.question(
+      `\nThe browser window needs you: it stopped on ${reason}. Switch to that window, resolve it, then press Enter here to continue (or Ctrl+C to stop for now — resume later with \`collector resume <jobId>\`)… `,
+    );
+    rl.close();
+    // Loop again with the SAME driver — the browser window stays open, and
+    // launch() is a no-op since the persistent context is already running.
   }
 }
 
@@ -92,7 +120,7 @@ async function cmdStart(config: CollectorConfig): Promise<number> {
       collection: collection.id,
       mode: collection.mode,
     });
-    await runOne(config, store, collection.id);
+    await runOneInteractive(config, store, collection.id);
     ran += 1;
   }
   logger.info("collector.start.done", { ran });
@@ -104,7 +132,7 @@ async function cmdResume(
   jobId: string,
 ): Promise<number> {
   const store = requireDb(config);
-  await runOne(config, store, jobId);
+  await runOneInteractive(config, store, jobId);
   return 0;
 }
 
@@ -113,11 +141,7 @@ async function cmdVerify(
   jobId: string,
 ): Promise<number> {
   const store = requireDb(config);
-  await runVerification(
-    { store, driver: makeDriver(config), pacing: makePacing(config) },
-    jobId,
-    config.workerId,
-  );
+  await runOneInteractive(config, store, jobId);
   return 0;
 }
 

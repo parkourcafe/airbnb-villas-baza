@@ -123,6 +123,12 @@ describe("browser collection end-to-end (mocked)", () => {
     expect(afterPass1[0]?.qualityStatus).toBe("partial");
     expect(afterPass1[0]?.uniqueListingCount).toBe(10);
 
+    // The browser window must be left OPEN on a manual-action stop — the
+    // operator resolves the block in that same visible window, it must not
+    // vanish on them.
+    expect(driver.closeCount).toBe(0);
+    expect(driver.launchCount).toBe(1);
+
     // --- Resume: operator resolved the block; enrich the remaining 5 ---
     blockedDetailIds.clear();
     const pass2 = await runCollection(
@@ -145,6 +151,11 @@ describe("browser collection end-to-end (mocked)", () => {
     expect(finalSnapshot?.uniqueListingCount).toBe(10);
     expect(finalSnapshot?.listings.every((l) => l.detail != null)).toBe(true);
     expect(finalSnapshot?.checksum).toMatch(/^[0-9a-f]{16}$/);
+
+    // The resumed pass reused the SAME still-open browser (launch() is a
+    // no-op on an already-open driver) and closed it cleanly once finished.
+    expect(driver.launchCount).toBe(2);
+    expect(driver.closeCount).toBe(1);
   });
 
   it("respects maxListings and the minimum-rating filter", async () => {
@@ -202,5 +213,7 @@ describe("browser collection end-to-end (mocked)", () => {
     );
     // No usable coverage → no snapshot was produced.
     expect(store.snapshotsFor(collection.id)).toHaveLength(0);
+    // The browser stays open here too, even on an immediate first-cell block.
+    expect(driver.closeCount).toBe(0);
   });
 });

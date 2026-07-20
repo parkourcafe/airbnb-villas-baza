@@ -30,13 +30,16 @@ export interface MockDriverOptions {
 export class MockPageDriver implements PageDriver {
   private searchIndex = 0;
   private readonly options: MockDriverOptions;
+  /** Test observability: how many times launch()/close() were actually called. */
+  launchCount = 0;
+  closeCount = 0;
 
   constructor(options: MockDriverOptions) {
     this.options = options;
   }
 
   async launch(): Promise<void> {
-    /* no-op for the mock */
+    this.launchCount += 1;
   }
 
   async collectSearch(_cell: SearchCell): Promise<SearchPageResult> {
@@ -67,6 +70,6 @@ export class MockPageDriver implements PageDriver {
   }
 
   async close(): Promise<void> {
-    /* no-op for the mock */
+    this.closeCount += 1;
   }
 }
