@@ -50,6 +50,10 @@ export class PlaywrightPageDriver implements PageDriver {
   }
 
   async launch(): Promise<void> {
+    // Idempotent: the runner may call launch() again after a manual-action
+    // pause (same driver instance, browser left open) — a persistent profile
+    // directory can only be opened by one browser process at a time.
+    if (this.context) return;
     const { chromium } = await import("playwright");
     // A persistent context reuses the operator's own session state (cookies) so
     // they can log in once, in the visible window, if a page asks them to.

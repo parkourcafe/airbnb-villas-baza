@@ -74,6 +74,8 @@ describe("verify_existing_listings", () => {
     expect(byId["3"]).toBe("active");
     // None of the statuses is a "removed" status — that concept does not exist.
     expect(Object.values(byId)).not.toContain("removed");
+    // A clean finish closes the browser normally.
+    expect(driver.closeCount).toBe(1);
   });
 
   it("stops for manual intervention on a login wall and records login_required", async () => {
@@ -99,6 +101,8 @@ describe("verify_existing_listings", () => {
     );
     // Stopped after the first listing recorded login_required (not a removal).
     expect(store.verifications[0]?.status).toBe("login_required");
+    // The browser stays open on a manual-action stop, same as collect mode.
+    expect(driver.closeCount).toBe(0);
   });
 });
 

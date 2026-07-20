@@ -115,8 +115,20 @@ export async function runVerification(
         break;
       }
     }
-  } finally {
+  } catch (error) {
+    // A genuine unexpected error — don't leave an orphaned browser window.
     await driver.close();
+    throw error;
+  }
+  // Keep the browser OPEN when we stopped for manual intervention, so the
+  // operator can act in the same window instead of it vanishing on them.
+  if (!blocked) {
+    await driver.close();
+  } else {
+    logger.info("verify.browser.left_open", {
+      collection: collectionId,
+      reason: manualReason,
+    });
   }
 
   const finalState = blocked ? "manual_action_required" : "completed";
